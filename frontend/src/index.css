@@ -913,3 +913,58 @@ h4.sec{
   .exmedia img{height:380px}
   .hm-wrap{display:flex;flex-direction:column;align-items:center}
 }
+
+/* --------------------------------------------------------- kettlebell tabata -- */
+/* Full-screen interval player. Everything is sized so the clock is readable from a
+   metre away with a kettlebell in your hand: one number, one phase, one instruction. */
+.tabata-player{
+  position:fixed;inset:0;z-index:70;background:var(--bg);
+  display:flex;flex-direction:column;gap:10px;
+  padding:calc(12px + var(--sat)) 18px calc(18px + var(--sab));
+  overflow-y:auto;overscroll-behavior:contain;
+}
+.tb-top{display:flex;align-items:center;gap:10px;flex:none}
+.tb-top>div{flex:1;min-width:0}
+.tb-top .sub{margin-top:1px}
+
+.tb-stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;padding:6px 0}
+.tb-phase{font-size:13px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--label-2)}
+.tb-phase.work{color:var(--acc)}
+.tb-phase.rest{color:var(--orange)}
+.tb-phase.prep{color:var(--label)}
+.tb-clock{
+  font-size:clamp(84px,27vw,168px);font-weight:700;line-height:.98;letter-spacing:-.06em;
+  font-variant-numeric:tabular-nums;color:var(--acc);
+}
+.tb-clock.warn{color:var(--orange)}
+[data-phase="rest"] .tb-clock{color:var(--orange)}
+[data-phase="prep"] .tb-clock{color:var(--label)}
+.tb-label{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--label-3);margin-top:10px}
+.tb-ex{font-size:24px;font-weight:600;letter-spacing:-.02em;text-transform:capitalize;line-height:1.15;max-width:22ch}
+.tb-round{font-size:14px;color:var(--label-2);font-variant-numeric:tabular-nums}
+.tb-dots{display:flex;gap:6px;margin-top:8px}
+.tb-dots i{width:9px;height:9px;border-radius:50%;background:var(--surface-3);transition:background var(--fast),transform var(--fast)}
+.tb-dots i.on{background:var(--acc);transform:scale(1.25)}
+.tb-dots i.done{background:var(--acc-2)}
+
+.tb-media{flex:none;width:min(100%,420px);margin:0 auto;display:flex;justify-content:center}
+.tb-media .exmedia{width:100%;margin-bottom:0}
+.tb-media .exmedia img{height:120px}
+
+.tb-progress{flex:none;height:6px;background:var(--surface-3);border-radius:99px;overflow:hidden;margin-top:2px}
+.tb-progress i{display:block;height:100%;background:var(--acc);border-radius:99px;transition:width .25s linear}
+[data-phase="rest"] .tb-progress i{background:var(--orange)}
+.tb-legend{flex:none;display:flex;justify-content:space-between;font-size:12px;color:var(--label-3);font-variant-numeric:tabular-nums}
+.tb-acts{flex:none;display:flex;gap:8px;align-items:stretch}
+.tb-acts .btn{flex:1;min-width:0}
+.tb-acts .btn.primary{flex:1.4}
+
+.tb-done{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;max-width:520px;margin:0 auto;width:100%}
+.tb-done-ico{font-size:52px;display:flex;justify-content:center;color:var(--acc);margin-bottom:8px}
+.tb-done h1{margin:0 0 6px;font-size:28px;letter-spacing:-.03em}
+.tb-done .tiles{margin-bottom:6px}
+
+@media (min-width:700px){
+  .tb-ex{font-size:30px}
+  .tb-media .exmedia img{height:180px}
+}

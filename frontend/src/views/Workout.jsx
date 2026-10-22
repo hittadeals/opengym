@@ -37,6 +37,19 @@ function StartChooser() {
         <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
         <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
         <span className="tag acc">{t('Start')}</span></div>)}</div></>}
+    {/* Interval sessions run on their own clock, so they are started from their own screen
+        rather than through the set-by-set workout flow. */}
+    <h4 className="sec">{t('Intervals')}</h4>
+    <button className="today-row" onClick={() => nav('/tabata')} style={{ marginTop: 0 }}>
+      <div className="row" style={{ gap: 9, minWidth: 0 }}>
+        <span className="lrow-i" style={{ color: 'var(--acc)' }}><Icon name="kettlebell" /></span>
+        <div style={{ minWidth: 0 }}>
+          <div className="lbl2">{t('Kettlebell Tabata')}</div>
+          <div className="ttl">{t('8 sessions · 15–25 min')}</div>
+        </div>
+      </div>
+      <Icon name="chevronRight" className="chev" />
+    </button>
     <div style={{ height: 14 }} />
     <Button icon="shuffle" onClick={() => startFlow(null)}>{t('Freestyle workout (pick as you go)')}</Button>
     {!S.routines.length && <><div style={{ height: 10 }} /><Button variant="primary" onClick={() => nav('/plan')}>{t('Build a plan first')}</Button></>}

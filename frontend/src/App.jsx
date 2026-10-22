@@ -19,6 +19,7 @@ import Home from './views/Home.jsx'
 import Plan from './views/Plan.jsx'
 import RoutineEdit from './views/RoutineEdit.jsx'
 import Workout from './views/Workout.jsx'
+import Tabata, { TabataPlayer } from './views/Tabata.jsx'
 import Stats from './views/Stats.jsx'
 import History from './views/History.jsx'
 import Library from './views/Library.jsx'
@@ -54,6 +55,9 @@ function Shell() {
   useWakeLock(!!S.active && S.keepAwake !== false)
 
   const authed = user || isGuest
+  // The interval player is a full-screen clock: a tab bar and a floating rest timer would
+  // cover the numbers the whole feature exists to show.
+  const playing = loc.pathname === '/tabata/play'
   if (!ready && !authed) return (
     <div id="app">
       <div style={{ paddingTop: '44vh', display: 'flex', justifyContent: 'center', fontSize: 34, color: 'var(--label-3)' }}>
@@ -74,6 +78,8 @@ function Shell() {
               <Route path="/plan" element={<Plan />} />
               <Route path="/plan/r/:id" element={<RoutineEdit />} />
               <Route path="/workout" element={<Workout />} />
+              <Route path="/tabata" element={<Tabata />} />
+              <Route path="/tabata/play" element={<TabataPlayer />} />
               <Route path="/stats" element={<Stats />} />
               <Route path="/history" element={<History />} />
               <Route path="/library" element={<Library />} />
@@ -90,8 +96,8 @@ function Shell() {
           )}
         </ErrorBoundary>
       </div>
-      <TabBar onStart={startFlow} />
-      <RestTimer />
+      {!playing && <TabBar onStart={startFlow} />}
+      {!playing && <RestTimer />}
       <Modals />
       <Toast />
     </>

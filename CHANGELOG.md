@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+### Kettlebell Tabata
+
+Eight short interval sessions on one bell, built on the original Tabata protocol: 20 seconds of
+work, 10 seconds of rest, eight rounds per exercise, with a longer break between exercises.
+Every session runs 15–25 minutes, and the set covers full body, upper body, lower body, the
+posterior chain, push, pull, core and a harder conditioning finisher.
+
+- ⏱️ **A clock you can read from a metre away.** Starting a session opens a full-screen
+  countdown with the phase, the exercise, the round and the time left in the whole session. It
+  keeps the screen awake, just like a normal workout.
+- 🔔 **Five seconds of warning, then three beeps.** A distinct double note at 5 seconds, a tick
+  for each of the last three, a rising cue when work starts and a low one when rest does. All of
+  it follows the existing sound setting and vibrates alongside.
+- ⏸️ **Pause, skip, leave.** Pause freezes the clock exactly where it was, skip jumps the current
+  interval, and leaving keeps everything logged so the session can be resumed from Start.
+- 📓 **It is still a workout.** Finished intervals are marked done as they happen, so the session
+  ends up in history, the calendar and the muscle map with per-exercise rounds, and the finish
+  summary works exactly as it does for a normal session.
+- 🔁 **Resume after a reload.** Reopening the player resumes at the first interval that has not
+  been logged; a finished session lands on its own summary instead of replaying from the top.
+
 ### The AI Coach
 
 openGym could always progress a plan. It could never *write* one, and it never looked at the
