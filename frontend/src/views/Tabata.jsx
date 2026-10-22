@@ -171,7 +171,7 @@ export function TabataPlayer() {
       setLeft(0)
       remaining.current = 0
       cue('done')
-      speak(t('Session complete'), document.documentElement.lang || 'en')
+      speak(t('Session complete'), document.documentElement.lang || 'en', useStore.getState().S.voiceURI)
       return
     }
     remaining.current = segs[next].sec * 1000
@@ -196,6 +196,12 @@ export function TabataPlayer() {
         lastSec.current = s
         if (s === 5) warning(5)
         else if (s > 0 && s <= 3) warning(s)
+        // Spoken countdown before the switch (not during rest, where a beep is enough).
+        const st = useStore.getState().S
+        if (st.sound && st.voice !== false && segs[idx]?.kind === 'work' && (s === 5 || s === 3 || s === 2 || s === 1)) {
+          const text = s === 5 ? t('Five seconds') : t(s === 3 ? 'Three' : s === 2 ? 'Two' : 'One')
+          speak(text, document.documentElement.lang || 'en', st.voiceURI)
+        }
       }
       if (ms <= 0) { stopped = true; clearInterval(iv); advance() }
     }
@@ -232,7 +238,7 @@ export function TabataPlayer() {
     if (!A || !tabata || startIdx >= segs.length || segs[startIdx]?.kind !== 'prep') return
     const id = setTimeout(() => {
       const st = useStore.getState().S
-      if (st.sound && st.voice !== false) speak(t('Get ready'), document.documentElement.lang || 'en')
+      if (st.sound && st.voice !== false) speak(t('Get ready'), document.documentElement.lang || 'en', st.voiceURI)
     }, 350)
     return () => clearTimeout(id)
   }, [])
@@ -246,9 +252,9 @@ export function TabataPlayer() {
     if (seg.kind === 'work') {
       const name = exOr(A.entries[seg.e].id).n
       const side = seg.side ? ', ' + t(seg.side === 'left' ? 'Left arm' : 'Right arm') : ''
-      speak(name + side, lang)
+      speak(name + side, lang, st.voiceURI)
     } else if (seg.kind === 'rest') {
-      speak(seg.long ? t('Round complete. Rest.') : t('Rest'), lang)
+      speak(seg.long ? t('Round complete. Rest.') : t('Rest'), lang, st.voiceURI)
     }
   }
 

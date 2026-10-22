@@ -27,9 +27,10 @@ upper body, lower body, the posterior chain, push, pull, core and a harder condi
   lifts (row, press, floor press, clean, snatch, windmill, bent press) expand to a left interval
   followed immediately by a right interval, so the next thing the clock shows is the other arm.
   Bilateral work (goblet squat, swing, thruster) uses the same bell with both hands.
-- 🗣️ **Spoken cues.** A short voice announces the exercise and the arm at every work interval,
-  "rest" at every rest and the round break. Settings → Voice cues turns it off; it follows the
-  Sounds switch.
+- 🗣️ **Spoken cues, including the countdown.** A short voice announces the exercise and the arm
+  at every work interval, "rest" at every rest and the round break, plus "five seconds" and
+  "three, two, one" before each work interval. Settings → Voice cues turns it off; the voice
+  itself can be chosen from the installed system voices and tested in place.
 - ⏸️ **Interruptions pause the clock.** Switching apps, locking the screen or taking a call
   pauses the interval instead of letting wall-clock time run past work you have not done.
 - 📅 **On the weekly plan, like any session.** A weekday can hold a Tabata pass, and it now

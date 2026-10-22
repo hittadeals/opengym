@@ -8,6 +8,7 @@ import { webauthnOK, passkeyLogin, passkeyRegister, IS_ANDROID } from '../lib/ap
 import { pushSupported, enablePush, disablePush, sendTestPush } from '../lib/push.js'
 import { wakeLockSupported } from '../lib/wakelock.js'
 import { unlockAudio, beep } from '../lib/sound.js'
+import { speak, primeVoice, listVoices, voiceSupported } from '../lib/voice.js'
 import { t, LANGS, INSTR_LANGS } from '../lib/i18n.js'
 import { DEMO, REPO } from '../lib/demo.js'
 import { MOBILE, shareExport, syncReminder } from '../lib/mobile.js'
@@ -27,6 +28,22 @@ export default function Settings() {
   const fileRef = useRef(null)
   const importRef = useRef(null)
   const wakeOK = wakeLockSupported()
+  const [voices, setVoices] = useState([])
+  useEffect(() => {
+    if (!voiceSupported()) return
+    const load = () => setVoices(listVoices())
+    load()
+    window.speechSynthesis.addEventListener('voiceschanged', load)
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', load)
+  }, [])
+  const voiceOpts = [
+    { value: '', label: t('System default') },
+    ...voices.map(v => ({ value: v.voiceURI, label: v.name, subtitle: v.lang }))
+  ]
+  const testVoice = () => {
+    primeVoice()
+    speak(t('Kettlebell goblet squat. Left arm.'), document.documentElement.lang || 'en', S.voiceURI)
+  }
 
   const doExport = async () => {
     const json = JSON.stringify(S, null, 2)
@@ -136,8 +153,14 @@ export default function Settings() {
         <Switch checked={!!S.sound} onChange={v => update(s => { s.sound = v })} />
       </Row>
       <Row icon="person" iconTint="var(--blue)" title={t('Voice cues')} subtitle={t('Speaks the exercise and the arm during Tabata.')}>
+        <Button size="sm" onClick={testVoice}>{t('Test')}</Button>
         <Switch checked={S.voice !== false} onChange={v => update(s => { s.voice = v })} />
       </Row>
+      {voiceSupported() && voices.length > 0 && (
+        <SelectRow icon="globe" iconTint="var(--blue)" title={t('Voice')} sheetTitle={t('Voice')}
+          value={S.voiceURI || ''} options={voiceOpts}
+          onChange={v => update(s => { s.voiceURI = v || null })} />
+      )}
       {/* Two names for the same judgement, so the column asks in the scale you already think in.
           The (i) sits before the control — you read it on the way to the choice, not after it. */}
       <Row icon="target" iconTint="var(--purple)" title={t('Effort per set')}>
