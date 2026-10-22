@@ -27,11 +27,13 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        if [ -z "$$(ls -A /out/img 2>/dev/null)" ]; then
+        if [ -z "$$(ls -A /out/img 2>/dev/null)" ] || [ -z "$$(ls -A /out/gif 2>/dev/null)" ]; then
           echo "↓ Downloading exercise media (~140 MB, one time)…"
+          rm -rf /tmp/ds
           git clone --depth 1 https://github.com/hasaneyldrm/exercises-dataset /tmp/ds
-          cp /tmp/ds/images/*.jpg /out/img/ && cp /tmp/ds/videos/*.gif /out/gif/
-          echo "✓ Exercise media ready ($$(ls /out/img | wc -l) images)."
+          cp /tmp/ds/images/*.jpg /out/img/
+          cp /tmp/ds/videos/*.gif /out/gif/
+          echo "✓ Exercise media ready ($$(ls /out/img | wc -l) images, $$(ls /out/gif | wc -l) GIFs)."
         else
           echo "✓ Exercise media already present — skipping download."
         fi
