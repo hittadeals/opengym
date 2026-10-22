@@ -527,7 +527,11 @@ h4.sec{
 .wprog{height:4px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-bottom:16px}
 .wprog i{display:block;height:100%;background:var(--acc);border-radius:99px;transition:width var(--med) var(--ease)}
 .exmedia{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#fff;margin-bottom:12px}
-.exmedia img{width:100%;height:320px;object-fit:contain;display:block}
+/* The dataset's images and GIFs are 180x180 (© Gym visual, redistributed at that size by
+   hasaneyldrm/exercises-dataset). Stretching them to 320-380 CSS px was upscaling them ~2x
+   and made every demo look soft. Show them at their native size, centred on the white card,
+   and only scale down from here. */
+.exmedia img{width:auto;height:180px;max-width:100%;object-fit:contain;display:block;margin:0 auto}
 .exmedia .gifhint,.exmedia .giftoggle{
   position:absolute;bottom:9px;display:inline-flex;align-items:center;gap:4px;
   background:rgba(0,0,0,.45);color:#fff;border-radius:99px;padding:5px 11px;
@@ -910,7 +914,7 @@ h4.sec{
   /* 520px fits the clock, the bar and all three controls on one line again */
   #timer.rest{flex-direction:row;align-items:center;gap:14px}
   #timer.rest .head{flex:1;min-width:0}
-  .exmedia img{height:380px}
+  .exmedia img{height:200px}
   .hm-wrap{display:flex;flex-direction:column;align-items:center}
 }
 
