@@ -32,8 +32,11 @@ upper body, lower body, the posterior chain, push, pull, core and a harder condi
   Sounds switch.
 - ⏸️ **Interruptions pause the clock.** Switching apps, locking the screen or taking a call
   pauses the interval instead of letting wall-clock time run past work you have not done.
-- 📅 **On the weekly plan.** A day can now hold a Tabata session instead of a routine. It shows
-  on Home and Plan, and the Start button launches the interval player directly.
+- 📅 **On the weekly plan, like any session.** A weekday can hold a Tabata pass, and it now
+  lives in the same weekly map as routines: the plan row, Home week strip, calendar dot,
+  day overrides, planned-days count and plan sharing all treat it exactly like a routine.
+  Tapping a day on Home now lists the eight passes too, so a missed day can be rescheduled
+  to Tabata without going through Plan first.
 - 📊 **Tabata stats.** Stats gains a card with sessions, last 30 days, completed intervals and
   total work time, plus the three most-played passes.
 - 📶 **Offline demonstrations.** The service worker caches the 360×360 GIFs on first view, so a

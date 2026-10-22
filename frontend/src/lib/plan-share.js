@@ -12,6 +12,7 @@ import { EXIDX } from './exercises.js'
 import { modeOf, fmtSec } from './history.js'
 import { uid, todayISO, DAYN, fmtNum, exCount } from './format.js'
 import { t } from './i18n.js'
+import { isTabataRef, tabataIdOf, sessionById } from './tabata.js'
 
 const PLAN_FMT = 1
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]   // Mon-first, matching the Plan screen
@@ -126,6 +127,7 @@ export function mergePlan(s, bundle, { schedule } = {}) {
     WEEK_ORDER.forEach(d => { delete s.week[d] })
     Object.entries(bundle.week || {}).forEach(([d, oldId]) => {
       if (ridMap[oldId]) s.week[d] = ridMap[oldId]
+      else if (isTabataRef(oldId) && sessionById(tabataIdOf(oldId))) s.week[d] = oldId
     })
   }
   return { routines: bundle.routines.length }

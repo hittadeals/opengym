@@ -93,6 +93,22 @@ export const SESSIONS = [
 
 export const sessionById = id => SESSIONS.find(s => s.id === id) || null
 
+// Tabata sessions are scheduled in the same weekly map as routines, under a prefixed id.
+// That keeps one source of truth for "what is planned today" and makes the calendar, the
+// week strip and day overrides treat them like any other session.
+export const TABATA_PREFIX = 'tabata:'
+export const tabataRef = id => TABATA_PREFIX + id
+export const isTabataRef = v => typeof v === 'string' && v.startsWith(TABATA_PREFIX)
+export const tabataIdOf = v => (isTabataRef(v) ? v.slice(TABATA_PREFIX.length) : null)
+
+export function scheduledTabata(S, iso) {
+  const ov = S?.dayPlan?.[iso]
+  if (ov !== undefined) return isTabataRef(ov) ? sessionById(tabataIdOf(ov)) : null
+  const wd = new Date(iso + 'T12:00:00').getDay()
+  const ref = S?.week?.[wd]
+  return isTabataRef(ref) ? sessionById(tabataIdOf(ref)) : null
+}
+
 // How many work intervals one exercise gets per round: two for a unilateral movement.
 export const slotsOf = e => (e.sides === 'each' ? 2 : 1)
 

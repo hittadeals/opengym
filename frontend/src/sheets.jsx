@@ -8,7 +8,7 @@ import { beep, vibrate } from './lib/sound.js'
 import { t, instrFor, getLang, INSTR_LANGS } from './lib/i18n.js'
 import { nav } from './lib/nav.js'
 import { starterRoutines } from './lib/starter.js'
-import { SESSIONS, sessionSeconds } from './lib/tabata.js'
+import { SESSIONS, sessionSeconds, tabataRef, isTabataRef, tabataIdOf, sessionById } from './lib/tabata.js'
 import Media, { Thumb } from './components/Media.jsx'
 import Stepper from './components/Stepper.jsx'
 import Icon from './components/Icon.jsx'
@@ -655,17 +655,22 @@ function PlanImport({ bundle, close }) {
 function DayOverride({ iso, close }) {
   const st = useStore(s => s.S)
   const wd = new Date(iso + 'T12:00:00').getDay()
-  const weeklyR = st.routines.find(r => r.id === st.week[wd])
+  const weeklyRef = st.week[wd]
+  const weeklyR = st.routines.find(r => r.id === weeklyRef)
+  const weeklyTab = isTabataRef(weeklyRef) ? sessionById(tabataIdOf(weeklyRef)) : null
   const hasOvr = st.dayPlan[iso] !== undefined
   const effId = effectiveRoutineId(st, iso)
+  const nameOf = v => isTabataRef(v)
+    ? (sessionById(tabataIdOf(v)) || {}).name
+    : (st.routines.find(r => r.id === v) || {}).name
   const set = v => {
     update(s => { if (!v) delete s.dayPlan[iso]; else s.dayPlan[iso] = v })
     close()
-    toast(v === '' ? t('Back to weekly plan') : v === 'rest' ? t('{0} set to rest', fmtDate(iso)) : t('{0} planned for {1}', (st.routines.find(r => r.id === v) || {}).name, fmtDate(iso)))
+    toast(v === '' ? t('Back to weekly plan') : v === 'rest' ? t('{0} set to rest', fmtDate(iso)) : t('{0} planned for {1}', nameOf(v), fmtDate(iso)))
   }
   return <>
     <h3>{fmtDate(iso, true)}</h3>
-    <div className="muted small" style={{ marginBottom: 12 }}>{t('Weekly plan:')} {weeklyR ? weeklyR.name : t('Rest')}{hasOvr && <span style={{ color: 'var(--orange)' }}> · {t('changed for this day')}</span>}<br />{t('Sick, missed a day or want a different session? Pick what to train instead.')}</div>
+    <div className="muted small" style={{ marginBottom: 12 }}>{t('Weekly plan:')} {weeklyR ? weeklyR.name : weeklyTab ? weeklyTab.name : t('Rest')}{hasOvr && <span style={{ color: 'var(--orange)' }}> · {t('changed for this day')}</span>}<br />{t('Sick, missed a day or want a different session? Pick what to train instead.')}</div>
     <div className="list">
       {st.routines.map(r => <div key={r.id} className="item" onClick={() => set(r.id)}>
         <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
@@ -674,27 +679,25 @@ function DayOverride({ iso, close }) {
       <div className="item" onClick={() => set('rest')}><span className="lrow-i" style={{ background: 'var(--surface-3)' }}><Icon name="moon" /></span><div className="grow"><div className="tt">{t('Rest / skip this day')}</div></div>{effId === null && <Icon name="check" className="accent" />}</div>
       {hasOvr && <div className="item" onClick={() => set('')}><span className="lrow-i" style={{ background: 'var(--surface-3)' }}><Icon name="reset" /></span><div className="grow"><div className="tt">{t('Back to weekly plan')}</div></div></div>}
     </div>
+    <h4 className="sec" style={{ marginTop: 14 }}>{t('Kettlebell Tabata')}</h4>
+    <div className="list">
+      {SESSIONS.map(session => <div key={session.id} className="item" onClick={() => set(tabataRef(session.id))}>
+        <span className="lrow-i" style={{ color: 'var(--acc)' }}><Icon name="kettlebell" /></span>
+        <div className="grow"><div className="tt">{session.name}</div><div className="ss">{t(session.level)} · {t('{0} rounds', session.rounds)} · ~{Math.round(sessionSeconds(session) / 60)} min</div></div>
+        {effId === tabataRef(session.id) && <Icon name="check" className="accent" />}</div>)}
+    </div>
   </>
 }
 export const dayOverrideSheet = iso => ui().openSheet(close => <DayOverride iso={iso} close={close} />)
 
 function DayAssign({ day, close }) {
   const st = useStore(s => s.S)
-  const set = v => {
-    update(s => {
-      if (v) s.week[day] = v; else delete s.week[day]
-      delete s.tabataWeek[day]
-    })
-    close()
-  }
-  const setTabata = id => {
-    update(s => { s.tabataWeek[day] = id; delete s.week[day] })
-    close()
-  }
+  const set = v => { update(s => { if (v) s.week[day] = v; else delete s.week[day] }); close() }
+  const setTabata = id => { update(s => { s.week[day] = tabataRef(id) }); close() }
   return <>
     <h3>{t(DAYN[day])}</h3>
     <div className="list">
-      <div className="item" onClick={() => set('')}><span className="lrow-i" style={{ background: 'var(--surface-3)' }}><Icon name="moon" /></span><div className="grow"><div className="tt">{t('Rest day')}</div></div>{!st.week[day] && !st.tabataWeek[day] && <Icon name="check" className="accent" />}</div>
+      <div className="item" onClick={() => set('')}><span className="lrow-i" style={{ background: 'var(--surface-3)' }}><Icon name="moon" /></span><div className="grow"><div className="tt">{t('Rest day')}</div></div>{!st.week[day] && <Icon name="check" className="accent" />}</div>
       {st.routines.map(r => <div key={r.id} className="item" onClick={() => set(r.id)}>
         <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
         <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
@@ -705,7 +708,7 @@ function DayAssign({ day, close }) {
       {SESSIONS.map(session => <div key={session.id} className="item" onClick={() => setTabata(session.id)}>
         <span className="lrow-i" style={{ color: 'var(--acc)' }}><Icon name="kettlebell" /></span>
         <div className="grow"><div className="tt">{session.name}</div><div className="ss">{t(session.level)} · {t('{0} rounds', session.rounds)} · ~{Math.round(sessionSeconds(session) / 60)} min</div></div>
-        {st.tabataWeek[day] === session.id && <Icon name="check" className="accent" />}</div>)}
+        {st.week[day] === tabataRef(session.id) && <Icon name="check" className="accent" />}</div>)}
     </div>
   </>
 }

@@ -9,7 +9,7 @@ const KEY = 'gym_state_v1'
 export const DEF = {
   unit: 'kg', restSec: 90, sound: true, voice: true, keepAwake: true, lang: 'en',
   theme: 'dark', accent: 'lime', body: 'male', targetW: null,
-  bodyweight: [], routines: [], week: {}, dayPlan: {}, tabataWeek: {},
+  bodyweight: [], routines: [], week: {}, dayPlan: {},
   exWeights: {}, workouts: [], active: null, customEx: [], gifSize: 'full',
   // effort: which per-set effort scale is logged — 'none' | 'rir' | 'rpe'. null, not 'none', so
   // that a profile which never chose (loaded state is overlaid on DEF, on every path: local,
@@ -23,12 +23,24 @@ export const DEF = {
 }
 const clone = o => JSON.parse(JSON.stringify(o))
 
+// Tabata sessions used to live in their own weekly map. Fold any saved ones into S.week as
+// `tabata:<id>` refs so the calendar, week strip and day overrides see one schedule.
+function migrate(S) {
+  if (S && S.tabataWeek && typeof S.tabataWeek === 'object') {
+    for (const [day, id] of Object.entries(S.tabataWeek)) {
+      if (id && !S.week[day]) S.week[day] = 'tabata:' + id
+    }
+    delete S.tabataWeek
+  }
+  return S
+}
+
 function loadState() {
   try {
     const raw = localStorage.getItem(KEY)
-    if (raw) return Object.assign(clone(DEF), JSON.parse(raw))
+    if (raw) return migrate(Object.assign(clone(DEF), JSON.parse(raw)))
   } catch (e) { /* ignore */ }
-  return clone(DEF)
+  return migrate(clone(DEF))
 }
 
 const hasData = st => !!((st.workouts || []).length || (st.routines || []).length || (st.bodyweight || []).length)
@@ -122,7 +134,7 @@ export const useStore = create((set, get) => {
         const dirty = localStorage.getItem('gym_dirty') === '1'
         if (state && (!hasData(S) || ((state._ts || 0) >= (S._ts || 0) && !dirty))) {
           const active = S.active
-          const next = Object.assign(clone(DEF), state)
+          const next = migrate(Object.assign(clone(DEF), state))
           if (active) next.active = active
           persist(next, false)
         } else if (hasData(S)) { await get().pushState() }

@@ -5,7 +5,7 @@ import { effectiveRoutine, effectiveRoutineId, streakWeeks, lastBW, setsDoneActi
 import { fmtNum, fmtDate, todayISO, isoOf, weekKey, DAYS } from '../lib/format.js'
 import { t, dateLocale } from '../lib/i18n.js'
 import { bwSheet, goalSheet, dayOverrideSheet, calendarSheet, startFlow, loadStarterPlan, bwDeltaColor } from '../sheets.jsx'
-import { sessionById } from '../lib/tabata.js'
+import { scheduledTabata } from '../lib/tabata.js'
 import { startTabata } from '../lib/tabata-session.js'
 import { enterFullscreen } from '../lib/fullscreen.js'
 import LineChart from '../components/LineChart.jsx'
@@ -54,8 +54,8 @@ export default function Home() {
   const today = new Date()
   const routine = effectiveRoutine(S, todayISO())
   const todayOvr = S.dayPlan[todayISO()] !== undefined
-  // A day override (a rescheduled workout or "rest") wins over the weekly Tabata slot.
-  const tabataToday = todayOvr ? null : sessionById(S.tabataWeek?.[new Date().getDay()])
+  // Tabata and routines share one weekly map; a day override wins over both.
+  const tabataToday = scheduledTabata(S, todayISO())
   const bw = lastBW(S)
   const prevBW = S.bodyweight.length > 1 ? S.bodyweight[S.bodyweight.length - 2] : null
   const delta = bw && prevBW ? bw.w - prevBW.w : null
@@ -106,7 +106,7 @@ export default function Home() {
           </span>
           <div style={{ minWidth: 0 }}>
             <div className="lbl2">{t('Today')}</div>
-            <div className="ttl">{S.active ? t('{0} — in progress', S.active.name) : routine ? routine.name : tabataToday ? tabataToday.name : t('Rest day')}{todayOvr && routine ? ' · ' + t('rescheduled') : ''}</div>
+            <div className="ttl">{S.active ? t('{0} — in progress', S.active.name) : routine ? routine.name : tabataToday ? tabataToday.name : t('Rest day')}{todayOvr && (routine || tabataToday) ? ' · ' + t('rescheduled') : ''}</div>
           </div>
         </div>
         {S.active ? <span className="tag" style={{ color: 'var(--orange)', background: 'color-mix(in srgb,var(--orange) 16%,transparent)' }}>{t('Resume')}</span>
