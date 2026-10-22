@@ -30,6 +30,17 @@ export default function Plan() {
       {coachOn && <button className="iconbtn" onClick={() => nav('/coach')} aria-label={t('Coach')} title={t('Coach')}><Icon name="sparkles" /></button>}
       <button className="iconbtn" onClick={planToolsSheet} aria-label={t('Share your plan')} title={t('Share your plan')}><Icon name="upload" /></button>
     </div>
+    <div className="card tappable" style={{ cursor: 'pointer', marginBottom: 14 }} onClick={() => nav('/tabata')}>
+      <div className="row" style={{ gap: 10 }}>
+        <span className="lrow-i" style={{ color: 'var(--acc)' }}><Icon name="kettlebell" /></span>
+        <div className="grow" style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 600, fontSize: 17, letterSpacing: '-.012em' }}>{t('Kettlebell Tabata')}</div>
+          <div className="muted small">{t('8 interval sessions · 15–25 min · 20s work / 10s rest')}</div>
+        </div>
+        <Icon name="chevronRight" className="chev" />
+      </div>
+    </div>
+
     <div className="cols"><div>
       <h4 className="sec">{t('Week schedule')}</h4>
       <div className="list" style={{ display: 'flex', flexDirection: 'column' }}>

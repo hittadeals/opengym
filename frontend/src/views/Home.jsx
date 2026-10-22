@@ -107,6 +107,17 @@ export default function Home() {
 
     {coachOn && <CoachCard nav={nav} />}
 
+    <div className="card tappable" style={{ cursor: 'pointer' }} onClick={() => nav('/tabata')}>
+      <div className="row" style={{ gap: 10 }}>
+        <span className="lrow-i" style={{ color: 'var(--acc)' }}><Icon name="kettlebell" /></span>
+        <div className="grow" style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 600, fontSize: 17, letterSpacing: '-.012em' }}>{t('Kettlebell Tabata')}</div>
+          <div className="muted small">{t('8 interval sessions · 15–25 min')}</div>
+        </div>
+        <Icon name="chevronRight" className="chev" />
+      </div>
+    </div>
+
     {!S.routines.length && !S.active && (
       <div className="card">
         <div className="row" style={{ gap: 10, marginBottom: 6 }}>

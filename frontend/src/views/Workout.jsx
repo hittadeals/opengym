@@ -32,11 +32,6 @@ function StartChooser() {
       </div>
       <Button variant="primary" icon="play" onClick={() => startFlow(todayR.id)}>{t('Start {0}', todayR.name)}</Button>
     </div>}
-    {others.length > 0 && <><h4 className="sec">{t('Other routines')}</h4>
-      <div className="list">{others.map(r => <div key={r.id} className="item" onClick={() => startFlow(r.id)}>
-        <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
-        <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
-        <span className="tag acc">{t('Start')}</span></div>)}</div></>}
     {/* Interval sessions run on their own clock, so they are started from their own screen
         rather than through the set-by-set workout flow. */}
     <h4 className="sec">{t('Intervals')}</h4>
@@ -50,6 +45,12 @@ function StartChooser() {
       </div>
       <Icon name="chevronRight" className="chev" />
     </button>
+    <div style={{ height: 14 }} />
+    {others.length > 0 && <><h4 className="sec">{t('Other routines')}</h4>
+      <div className="list">{others.map(r => <div key={r.id} className="item" onClick={() => startFlow(r.id)}>
+        <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
+        <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
+        <span className="tag acc">{t('Start')}</span></div>)}</div></>}
     <div style={{ height: 14 }} />
     <Button icon="shuffle" onClick={() => startFlow(null)}>{t('Freestyle workout (pick as you go)')}</Button>
     {!S.routines.length && <><div style={{ height: 10 }} /><Button variant="primary" onClick={() => nav('/plan')}>{t('Build a plan first')}</Button></>}
