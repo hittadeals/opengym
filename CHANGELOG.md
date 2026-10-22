@@ -25,15 +25,19 @@ posterior chain, push, pull, core and a harder conditioning finisher.
 
 ### Sharper exercise demos
 
-The exercise library's images and GIFs ship at 180×180 — the resolution the upstream dataset is
-licensed to redistribute. That is the ceiling for the bundled media, and the app now renders it
-at 180 px instead of stretching it.
+The exercise library's bundled images and GIFs are 180×180 — the resolution the upstream dataset
+is licensed to redistribute. The app renders them at 180 px instead of stretching them, and now
+prefers a **360×360 animation** wherever one exists: the free
+[ExerciseGymGifsDB](https://github.com/JahelCuadrado/ExerciseGymGifsDB) mirror carries the same
+Gym visual animations at twice the resolution, and 1,323 of the 1,324 exercises map to it by exact
+name. The one remaining exercise (`london bridge`) keeps the 180 file, every CDN failure falls
+back to the local file, and `VITE_HD_MEDIA=0` pins the whole app to the bundled media. Media
+rights stay with the original authors; see NOTICE.md.
 
-For anyone who wants more, `scripts/import-hd-media.mjs` imports the licensed ExerciseDB.io
-package, whose numeric exercise ids match this dataset one-to-one. It copies by id only after
-checking the exercise name and equipment, leaves the bundled 180 file in place when anything
-looks wrong, and writes a report of every skipped or mismatched id. Starter (360×360) and Pro
-(720/1080) both fit the same script; media stays in `./media` and out of git.
+`scripts/import-hd-media.mjs` remains for anyone who buys the licensed ExerciseDB.io package
+(Starter 360, Pro 720/1080, same numeric ids) and wants the files self-hosted instead of loaded
+from the CDN. It copies by id only after checking the exercise name and equipment, leaves the
+bundled file in place when anything looks wrong, and writes a report of every skipped id.
 
 ### The AI Coach
 

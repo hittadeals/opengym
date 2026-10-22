@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { imgSrc, gifSrc } from '../lib/exercises.js'
+import { useEffect, useState } from 'react'
+import { imgSrc, gifSrc, localGifSrc } from '../lib/exercises.js'
 import { useStore } from '../store/useStore.js'
 import { t } from '../lib/i18n.js'
 import Icon from './Icon.jsx'
@@ -11,14 +11,19 @@ import Icon from './Icon.jsx'
 // future workouts (issue #12).
 export default function Media({ ex, id, compact, minimizable }) {
   const [playing, setPlaying] = useState(true)
+  // A blocked/slow CDN must not leave a broken image: the first failure swaps in the
+  // bundled 180 GIF for the rest of this exercise.
+  const [gifFailed, setGifFailed] = useState(false)
   const gifSize = useStore(s => s.S.gifSize)
   const update = useStore(s => s.update)
+  useEffect(() => setGifFailed(false), [ex.id])
   if (!ex.gif) return null
   const mini = minimizable && gifSize === 'mini'
   const toggleSize = e => { e.stopPropagation(); update(s => { s.gifSize = mini ? 'full' : 'mini' }) }
+  const src = playing ? (gifFailed ? localGifSrc(ex) : gifSrc(ex)) : imgSrc(ex)
   return (
     <div className={'exmedia' + (compact ? ' compact' : '') + (mini ? ' mini' : '')} id={id} onClick={() => setPlaying(p => !p)}>
-      <img decoding="async" src={playing ? gifSrc(ex) : imgSrc(ex)} alt={ex.n} />
+      <img decoding="async" src={src} alt={ex.n} onError={() => { if (playing && !gifFailed) setGifFailed(true) }} />
       {minimizable && (
         <button className="giftoggle" onClick={toggleSize}>
           <Icon name={mini ? 'expand' : 'minimize'} />{mini ? t('Expand') : t('Minimize')}

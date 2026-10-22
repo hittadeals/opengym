@@ -1,4 +1,5 @@
 import { EXDB } from './exercises-data.js'
+import { HD_BASE, HD_GIF } from './hd-media.js'
 import { t } from './i18n.js'
 
 export { EXDB }
@@ -31,8 +32,14 @@ export const allExercises = st => [...(st.customEx || []), ...EXDB]
 // shipping ~140 MB of images into the deployment.
 const IMG_BASE = import.meta.env.VITE_IMG_BASE || 'img/'
 const GIF_BASE = import.meta.env.VITE_GIF_BASE || 'gif/'
+// The bundled animations are 180x180. When a 360x360 copy exists for an exercise, load that
+// instead (same animation, twice the detail); the local file stays as the fallback and as the
+// source for the paused still. VITE_HD_MEDIA=0 pins everything to the bundled files.
+const HD_MEDIA = import.meta.env.VITE_HD_MEDIA !== '0'
 export const imgSrc = ex => IMG_BASE + ex.img
-export const gifSrc = ex => GIF_BASE + ex.gif
+export const localGifSrc = ex => GIF_BASE + ex.gif
+export const gifSrc = ex => (HD_MEDIA && HD_GIF[ex.id] ? HD_BASE + HD_GIF[ex.id] : localGifSrc(ex))
+export const hdGifAvailable = ex => !!(HD_MEDIA && HD_GIF[ex.id])
 
 // Cardio exercises log time + speed instead of weight × reps.
 export const isCardio = idOrEx => (typeof idOrEx === 'string' ? EXIDX[idOrEx] : idOrEx)?.bp === 'cardio'
