@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { SESSIONS, TABATA, segmentsFor, sessionSeconds, firstPendingIndex, clock } from './tabata.js'
+import { SESSIONS, TABATA, segmentsFor, sessionSeconds, firstPendingIndex, clock, slotsOf } from './tabata.js'
 import { EXIDX } from './exercises.js'
+
+const B = { sides: 'both' }
+const E = { sides: 'each' }
 
 describe('kettlebell Tabata sessions', () => {
   it('ships eight sessions of four or five exercises', () => {
@@ -8,21 +11,23 @@ describe('kettlebell Tabata sessions', () => {
     for (const s of SESSIONS) {
       expect(s.ex.length, s.name).toBeGreaterThanOrEqual(4)
       expect(s.ex.length, s.name).toBeLessThanOrEqual(5)
+      expect(s.rounds, s.name).toBeGreaterThanOrEqual(4)
     }
   })
 
   it('only uses exercises that exist and are kettlebell work', () => {
     for (const s of SESSIONS) {
-      for (const id of s.ex) {
-        expect(EXIDX[id], `${s.name}: ${id}`).toBeTruthy()
-        expect(EXIDX[id].eq, `${s.name}: ${EXIDX[id].n}`).toBe('kettlebell')
+      for (const item of s.ex) {
+        expect(EXIDX[item.id], `${s.name}: ${item.id}`).toBeTruthy()
+        expect(EXIDX[item.id].eq, `${s.name}: ${EXIDX[item.id].n}`).toBe('kettlebell')
+        expect(['both', 'each']).toContain(item.sides)
       }
     }
   })
 
   it('lands inside the advertised 15–25 minute window', () => {
     for (const s of SESSIONS) {
-      const mins = sessionSeconds(s.ex.length) / 60
+      const mins = sessionSeconds(s) / 60
       expect(mins, s.name).toBeGreaterThanOrEqual(15)
       expect(mins, s.name).toBeLessThanOrEqual(25)
     }
@@ -31,49 +36,55 @@ describe('kettlebell Tabata sessions', () => {
 
 describe('segmentsFor', () => {
   it('opens with a get-ready countdown', () => {
-    expect(segmentsFor(1)[0]).toMatchObject({ kind: 'prep', sec: TABATA.prep })
+    expect(segmentsFor([B])[0]).toMatchObject({ kind: 'prep', sec: TABATA.prep })
   })
 
-  it('rotates exercises inside every round instead of repeating one', () => {
-    const segs = segmentsFor(2, { ...TABATA, prep: 0, rounds: 2 })
+  it('rotates exercises inside every round', () => {
+    const segs = segmentsFor([B, B], { ...TABATA, prep: 0, rounds: 2 })
     expect(segs.filter(s => s.kind === 'work').map(s => `${s.e}:${s.round}`))
       .toEqual(['0:1', '1:1', '0:2', '1:2'])
     expect(segs.filter(s => s.long).map(s => `${s.e}:${s.round}`)).toEqual(['1:1'])
   })
 
-  it('walks 8 work intervals per exercise with short rests and a break between rounds', () => {
-    const segs = segmentsFor(2, { ...TABATA, prep: 0 })
-    expect(segs.filter(s => s.kind === 'work')).toHaveLength(16)
-    expect(segs.filter(s => s.kind === 'rest')).toHaveLength(15)
-    expect(segs[0]).toMatchObject({ kind: 'work', e: 0, round: 1, sec: 20 })
-    expect(segs[1]).toMatchObject({ kind: 'rest', e: 0, round: 1, sec: 10, long: false })
-    // the last work of a round is followed by the break, then the first exercise again
-    const endOfRound = segs.findIndex(s => s.kind === 'work' && s.e === 1 && s.round === 1)
-    expect(segs[endOfRound + 1]).toMatchObject({ kind: 'rest', sec: TABATA.between, long: true })
-    expect(segs[endOfRound + 2]).toMatchObject({ kind: 'work', e: 0, round: 2 })
-    // and the session ends on work, with no trailing rest
-    expect(segs.at(-1)).toMatchObject({ kind: 'work', e: 1, round: 8 })
+  it('splits a unilateral exercise into back-to-back left and right intervals', () => {
+    const segs = segmentsFor([B, E, B], { ...TABATA, prep: 0, rounds: 2 })
+    const firstRound = segs.filter(s => s.kind === 'work' && s.round === 1)
+    expect(firstRound.map(s => `${s.e}:${s.side}:${s.set}`)).toEqual([
+      '0:null:0', '1:left:0', '1:right:1', '2:null:0'
+    ])
+    // the break comes after the last interval of the round, not between the arms
+    expect(segs.find(s => s.long)).toMatchObject({ e: 2, round: 1 })
+  })
+
+  it('gives each exercise the right number of sets per round', () => {
+    expect(slotsOf(B)).toBe(1)
+    expect(slotsOf(E)).toBe(2)
+    const segs = segmentsFor([B, E], { ...TABATA, prep: 0, rounds: 3 })
+    const lastFor = e => segs.filter(s => s.kind === 'work' && s.e === e).at(-1)
+    expect(lastFor(0).set).toBe(2)   // 3 rounds × 1
+    expect(lastFor(1).set).toBe(5)   // 3 rounds × 2
   })
 
   it('adds up to the session length it reports', () => {
-    const segs = segmentsFor(4)
-    expect(sessionSeconds(4)).toBe(segs.reduce((n, s) => n + s.sec, 0))
+    const s = SESSIONS[0]
+    const cfg = { ...TABATA, rounds: s.rounds }
+    expect(sessionSeconds(s)).toBe(segmentsFor(s.ex, cfg).reduce((n, x) => n + x.sec, 0))
   })
 })
 
 describe('firstPendingIndex', () => {
-  const segs = segmentsFor(1)
-  const entries = [{ sets: Array.from({ length: 8 }, () => ({ done: false })) }]
+  const segs = segmentsFor([E], { ...TABATA, prep: 0, rounds: 2 })
+  const entries = [{ sets: Array.from({ length: 4 }, () => ({ done: false })) }]
 
   it('starts at the prepare countdown when nothing is logged', () => {
-    expect(firstPendingIndex(segs, entries)).toBe(0)
+    expect(firstPendingIndex(segmentsFor([E], { ...TABATA, rounds: 2 }), entries)).toBe(0)
   })
 
   it('resumes at the first interval whose set is still open', () => {
     entries[0].sets[0].done = true
     entries[0].sets[1].done = true
     const i = firstPendingIndex(segs, entries)
-    expect(segs[i]).toMatchObject({ kind: 'work', e: 0, round: 3 })
+    expect(segs[i]).toMatchObject({ kind: 'work', e: 0, round: 2, side: 'left', set: 2 })
   })
 
   it('reports the end when every set is logged', () => {

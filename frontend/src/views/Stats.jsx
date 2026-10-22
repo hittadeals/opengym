@@ -5,6 +5,7 @@ import { EXIDX } from '../lib/exercises.js'
 import { lastBW, streakWeeks, setLabel, modeOf, effortOf } from '../lib/history.js'
 import { fmtNum, fmtDate, fmtVol, todayISO, weekKey } from '../lib/format.js'
 import { t } from '../lib/i18n.js'
+import { clock } from '../lib/tabata.js'
 import { bwSheet, goalSheet, calendarSheet, workoutDetailSheet, WorkoutRow, bwDeltaColor } from '../sheets.jsx'
 import LineChart from '../components/LineChart.jsx'
 import Heatmap from '../components/Heatmap.jsx'
@@ -130,6 +131,40 @@ function EffortCard({ S }) {
 }
 
 // Stats = the analytics hub: all charts, progress and history live here.
+// Compact Tabata summary: how often the interval sessions are used and how much actual work
+// they added. Old sessions are recognised by name so history from before the marker still
+// counts.
+function TabataCard({ S }) {
+  const nav = useNavigate()
+  const ws = S.workouts.filter(w => w.tabata || /^Tabata · /.test(w.name || ''))
+  if (!ws.length) return null
+  const workSec = ws.reduce((n, w) => n + w.entries.reduce((m, e) => m + e.sets.filter(s => s.done).reduce((k, s) => k + (s.sec || 0), 0), 0), 0)
+  const intervals = ws.reduce((n, w) => n + w.entries.reduce((m, e) => m + e.sets.filter(s => s.done).length, 0), 0)
+  const counts = new Map()
+  ws.forEach(w => {
+    const name = w.tabata?.name || (w.name || '').replace(/^Tabata · /, '')
+    counts.set(name, (counts.get(name) || 0) + 1)
+  })
+  const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
+  const last30 = ws.filter(w => (w.start || 0) > Date.now() - 30 * 86400000).length
+  return <div className="card">
+    <div className="row between" style={{ marginBottom: 8 }}>
+      <h2 style={{ margin: 0 }}>{t('Kettlebell Tabata')}</h2>
+      <Button size="sm" icon="kettlebell" onClick={() => nav('/tabata')}>{t('Open')}</Button>
+    </div>
+    <div className="tiles">
+      <div className="tile"><div className="l">{t('Sessions')}</div><div className="v">{ws.length}</div></div>
+      <div className="tile"><div className="l">{t('Last 30 days')}</div><div className="v">{last30}</div></div>
+      <div className="tile"><div className="l">{t('Intervals')}</div><div className="v">{intervals}</div></div>
+      <div className="tile"><div className="l">{t('Work time')}</div><div className="v" style={{ fontSize: '1.1rem' }}>{clock(workSec)}</div></div>
+    </div>
+    {top.length > 0 && <div className="list" style={{ marginTop: 10 }}>{top.map(([name, n]) => <div key={name} className="item">
+      <span className="lrow-i"><Icon name="kettlebell" /></span>
+      <div className="grow"><div className="tt">{name}</div><div className="ss">{t(n === 1 ? '{0} session' : '{0} sessions', n)}</div></div>
+    </div>)}</div>}
+  </div>
+}
+
 export default function Stats() {
   const nav = useNavigate()
   const S = useStore(s => s.S)
@@ -204,6 +239,8 @@ export default function Stats() {
       <div className="tile"><div className="l"><Icon name="flame" />{t('Week streak')}</div><div className="v">{streakWeeks(S)}</div></div>
       <div className="tile"><div className="l"><Icon name="scale" />{t('Weight 30d')}</div><div className="v" style={{ fontSize: 22, color: bwDelta30 === null ? 'inherit' : bwDeltaColor(bwDelta30, (lastBW(S) || {}).w || 0) }}>{bwDelta30 === null ? '—' : (bwDelta30 > 0 ? '+' : '') + fmtNum(bwDelta30) + ' ' + S.unit}</div></div>
     </div>
+
+    <TabataCard S={S} />
 
     <div className="card">
       <h2>{t('Activity — last 12 months')} <span className="dim" style={{ textTransform: 'none', letterSpacing: 0 }}>· {t('by time trained')}</span></h2>

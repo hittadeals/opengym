@@ -135,6 +135,9 @@ export default function Settings() {
         <Button size="sm" onClick={async () => { await unlockAudio(); beep(true, 880, 0.12); beep(true, 1180, 0.18, 0.13) }}>{t('Test')}</Button>
         <Switch checked={!!S.sound} onChange={v => update(s => { s.sound = v })} />
       </Row>
+      <Row icon="person" iconTint="var(--blue)" title={t('Voice cues')} subtitle={t('Speaks the exercise and the arm during Tabata.')}>
+        <Switch checked={S.voice !== false} onChange={v => update(s => { s.voice = v })} />
+      </Row>
       {/* Two names for the same judgement, so the column asks in the scale you already think in.
           The (i) sits before the control — you read it on the way to the choice, not after it. */}
       <Row icon="target" iconTint="var(--purple)" title={t('Effort per set')}>

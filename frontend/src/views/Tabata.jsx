@@ -3,11 +3,12 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { exOr } from '../lib/exercises.js'
-import { uid, todayISO } from '../lib/format.js'
 import { t } from '../lib/i18n.js'
 import { beep, vibrate, unlockAudio } from '../lib/sound.js'
+import { speak, primeVoice, stopVoice } from '../lib/voice.js'
 import { fullscreenSupported, fullscreenElement, enterFullscreen, exitFullscreen, onFullscreenChange } from '../lib/fullscreen.js'
-import { SESSIONS, TABATA, segmentsFor, sessionSeconds, firstPendingIndex, clock } from '../lib/tabata.js'
+import { SESSIONS, segmentsFor, sessionSeconds, firstPendingIndex, clock } from '../lib/tabata.js'
+import { startTabata } from '../lib/tabata-session.js'
 import { confirmSheet, finishWorkout } from '../sheets.jsx'
 import Media, { Thumb } from '../components/Media.jsx'
 import Icon from '../components/Icon.jsx'
@@ -35,24 +36,6 @@ function warning(sec) {
   else beep(on, 660, 0.08)
 }
 
-function startSession(session) {
-  const work = TABATA.work
-  const entries = session.ex.map(id => ({
-    id,
-    target: { id, mode: 'time', sec: work, sets: TABATA.rounds, weight: 0 },
-    sets: Array.from({ length: TABATA.rounds }, () => ({ sec: work, w: 0, done: false }))
-  }))
-  useStore.getState().update(s => {
-    s.active = {
-      id: uid(), d: todayISO(), start: Date.now(), routineId: null,
-      name: t('Tabata · {0}', session.name), bw: null, cur: 0, entries,
-      tabata: { ...TABATA, id: session.id, name: session.name }
-    }
-  })
-  useUI.getState().stopRest()
-  useUI.getState().stopWork()
-}
-
 /* ------------------------------- session list ------------------------------- */
 
 export default function Tabata() {
@@ -64,11 +47,12 @@ export default function Tabata() {
 
   const begin = session => {
     const go = () => {
-      // Both must happen inside the tap: the audio context needs a gesture, and fullscreen
-      // is only granted from one too.
+      // All three must happen inside the tap: audio and speech need a gesture, and
+      // fullscreen is only granted from one too.
       unlockAudio()
+      primeVoice()
       enterFullscreen()
-      startSession(session)
+      startTabata(session)
       nav('/tabata/play')
     }
     if (active) {
@@ -100,7 +84,7 @@ export default function Tabata() {
 
     <div className="list">
       {SESSIONS.map(session => {
-        const mins = Math.round(sessionSeconds(session.ex.length) / 60)
+        const mins = Math.round(sessionSeconds(session) / 60)
         return <div key={session.id} className="item" onClick={() => begin(session)} style={{ alignItems: 'flex-start' }}>
           <span className="lrow-i" style={{ marginTop: 2 }}><Icon name="kettlebell" /></span>
           <div className="grow" style={{ minWidth: 0 }}>
@@ -108,14 +92,14 @@ export default function Tabata() {
               <div className="tt">{session.name}</div>
               <span className="tag">{t(session.level)}</span>
             </div>
-            <div className="ss">{t(session.focus)} · {t('{0} exercises · {1} rounds', session.ex.length, 8)} · ~{mins} min</div>
+            <div className="ss">{t(session.focus)} · {t('{0} exercises · {1} rounds', session.ex.length, session.rounds)} · ~{mins} min</div>
             <div className="tb-thumbs">
-              {session.ex.map(id => {
-                const e = exOr(id)
-                return <span className="tb-thumb" key={id} title={e.n}><Thumb ex={e} /></span>
+              {session.ex.map(item => {
+                const e = exOr(item.id)
+                return <span className="tb-thumb" key={item.id} title={e.n}><Thumb ex={e} /></span>
               })}
             </div>
-            <div className="tb-includes">{session.ex.map(id => exOr(id).n).join(' · ')}</div>
+            <div className="tb-includes">{session.ex.map(item => `${exOr(item.id).n}${item.sides === 'each' ? ' (L/R)' : ''}`).join(' · ')}</div>
             <div className="small dim tb-note">{session.note}</div>
           </div>
           <span className="tag acc">{t('Start')}</span>
@@ -135,7 +119,7 @@ export function TabataPlayer() {
   const tabata = A?.tabata
 
   // Hooks must run unconditionally; the guard sits after them.
-  const segs = useMemo(() => (A && tabata ? segmentsFor(A.entries.length, tabata) : []), [A?.entries.length, tabata?.id])
+  const segs = useMemo(() => (A && tabata ? segmentsFor(A.entries, tabata) : []), [A?.entries.length, tabata?.rounds, tabata?.id])
   const total = useMemo(() => segs.reduce((n, s) => n + s.sec, 0), [segs])
   const [startIdx] = useState(() => (A && tabata ? firstPendingIndex(segs, A.entries) : 0))
   const [idx, setIdx] = useState(() => Math.min(startIdx, segs.length))
@@ -172,7 +156,7 @@ export function TabataPlayer() {
 
   function markDone(seg) {
     useStore.getState().update(s => {
-      const set = s.active?.entries?.[seg.e]?.sets?.[seg.round - 1]
+      const set = s.active?.entries?.[seg.e]?.sets?.[seg.set]
       if (set && !set.done) { set.done = true; set.sec = tabata.work }
     })
   }
@@ -187,6 +171,7 @@ export function TabataPlayer() {
       setLeft(0)
       remaining.current = 0
       cue('done')
+      speak(t('Session complete'), document.documentElement.lang || 'en')
       return
     }
     remaining.current = segs[next].sec * 1000
@@ -194,6 +179,7 @@ export function TabataPlayer() {
     setIdx(next)
     setLeft(remaining.current)
     cue(segs[next].kind)
+    setTimeout(() => saySegment(segs[next]), 180)
   }
 
   useEffect(() => {
@@ -222,15 +208,60 @@ export function TabataPlayer() {
     }
   }, [idx, paused, done])
 
+  // Interruptions pause the clock: phone call, app switch, screen lock. The world outside
+  // the interval must not eat the work you have not done yet.
+  const pausedRef = useRef(paused)
+  const doneRef = useRef(done)
+  pausedRef.current = paused
+  doneRef.current = done
+  useEffect(() => {
+    const onHidden = () => {
+      if (document.visibilityState !== 'hidden' || pausedRef.current || doneRef.current) return
+      const ms = endAt.current ? Math.max(0, endAt.current - Date.now()) : remaining.current
+      remaining.current = ms
+      setLeft(ms)
+      setPaused(true)
+      stopVoice()
+    }
+    document.addEventListener('visibilitychange', onHidden)
+    return () => document.removeEventListener('visibilitychange', onHidden)
+  }, [])
+
+  // Spoken get-ready, once, if the player opens at the prep segment.
+  useEffect(() => {
+    if (!A || !tabata || startIdx >= segs.length || segs[startIdx]?.kind !== 'prep') return
+    const id = setTimeout(() => {
+      const st = useStore.getState().S
+      if (st.sound && st.voice !== false) speak(t('Get ready'), document.documentElement.lang || 'en')
+    }, 350)
+    return () => clearTimeout(id)
+  }, [])
+
   if (!A || !tabata) return <Navigate to="/workout" replace />
 
-  const leave = () => confirmSheet({
-    title: t('Leave the session?'),
-    message: t('The intervals you have logged are kept. Resume from Start when you are ready.'),
-    confirmText: t('Leave'), onConfirm: () => nav('/workout')
-  })
+  function saySegment(seg) {
+    const st = useStore.getState().S
+    if (!st.sound || st.voice === false) return
+    const lang = document.documentElement.lang || 'en'
+    if (seg.kind === 'work') {
+      const name = exOr(A.entries[seg.e].id).n
+      const side = seg.side ? ', ' + t(seg.side === 'left' ? 'Left arm' : 'Right arm') : ''
+      speak(name + side, lang)
+    } else if (seg.kind === 'rest') {
+      speak(seg.long ? t('Round complete. Rest.') : t('Rest'), lang)
+    }
+  }
 
-  const finish = () => { finishWorkout(); nav('/home') }
+  const leave = () => {
+    stopVoice()
+    confirmSheet({
+      title: t('Leave the session?'),
+      message: t('The intervals you have logged are kept. Resume from Start when you are ready.'),
+      confirmText: t('Leave'), onConfirm: () => nav('/workout')
+    })
+  }
+
+  const finish = () => { stopVoice(); finishWorkout(); nav('/home') }
 
   // Freeze the clock at what is actually left. `endAt` is only set while the interval effect
   // is running, so a pause pressed between two segments falls back to the carried value
@@ -243,7 +274,7 @@ export function TabataPlayer() {
   }
 
   if (done) {
-    const rounds = A.entries.length * tabata.rounds
+    const works = segs.filter(s => s.kind === 'work').length
     return <div className="tabata-player">
       <div className="tb-done">
         <div className="tb-done-ico"><Icon name="trophy" /></div>
@@ -251,9 +282,9 @@ export function TabataPlayer() {
         <div className="muted" style={{ marginBottom: 18 }}>{t('Every interval done — that is the whole session.')}</div>
         <div className="tiles">
           <div className="tile"><div className="l">{t('Duration')}</div><div className="v" style={{ fontSize: '1.1rem' }}>{clock(total)}</div></div>
-          <div className="tile"><div className="l">{t('Rounds')}</div><div className="v" style={{ fontSize: '1.1rem' }}>{rounds}</div></div>
+          <div className="tile"><div className="l">{t('Rounds')}</div><div className="v" style={{ fontSize: '1.1rem' }}>{tabata.rounds}</div></div>
           <div className="tile"><div className="l">{t('Exercises')}</div><div className="v" style={{ fontSize: '1.1rem' }}>{A.entries.length}</div></div>
-          <div className="tile"><div className="l">{t('Work')}</div><div className="v" style={{ fontSize: '1.1rem' }}>{clock(A.entries.length * tabata.rounds * tabata.work)}</div></div>
+          <div className="tile"><div className="l">{t('Work')}</div><div className="v" style={{ fontSize: '1.1rem' }}>{clock(works * tabata.work)}</div></div>
         </div>
         <div style={{ height: 18 }} />
         <Button variant="primary" icon="check" onClick={finish}>{t('Save workout')}</Button>
@@ -273,15 +304,21 @@ export function TabataPlayer() {
   const phase = seg.kind === 'prep' ? t('Get ready') : seg.kind === 'work' ? t('Work') : t('Rest')
   const big = clock(secs)
   const nextWorkSeg = seg.kind === 'work' ? segs.slice(idx + 1).find(s => s.kind === 'work') : null
+  const nextSide = nextWorkSeg?.side ? t(nextWorkSeg.side === 'left' ? 'Left arm' : 'Right arm') : ''
   const nextLine = nextWorkSeg
-    ? (nextWorkSeg.round !== workSeg?.round
-        ? t('Next round: {0}', exOr(A.entries[nextWorkSeg.e].id).n)
-        : t('Next: {0}', exOr(A.entries[nextWorkSeg.e].id).n))
+    ? (nextWorkSeg.e === workSeg?.e
+        ? t('Next: {0}', nextSide)
+        : t('Next: {0}', exOr(A.entries[nextWorkSeg.e].id).n + (nextSide ? ' · ' + nextSide : '')))
     : null
-  // One dot per exercise in the current circuit round: done, current, or still ahead.
+  // One dot per work interval in the current circuit round: left, right, both — done,
+  // current or still ahead.
   const circuitRound = workSeg?.round || 1
-  const roundDots = A.entries.map((en, i) =>
-    en.sets?.[circuitRound - 1]?.done ? 'done' : i === workSeg?.e ? 'on' : '')
+  const roundSlots = segs.filter(s => s.kind === 'work' && s.round === circuitRound)
+  const roundDots = roundSlots.map(s =>
+    A.entries[s.e]?.sets?.[s.set]?.done ? 'done' : (s.e === workSeg?.e && s.set === workSeg?.set ? 'on' : ''))
+  const sideText = workSeg
+    ? (workSeg.side ? t(workSeg.side === 'left' ? 'Left arm' : 'Right arm') : t('Both hands'))
+    : ''
 
   return <div className="tabata-player" data-phase={seg.kind}>
     <div className="tb-top">
@@ -316,10 +353,12 @@ export function TabataPlayer() {
         <div className="tb-label">{t('Next up')}</div>
         <div className="tb-ex">{ex ? ex.n : ''}</div>
         {workSeg && <div className="tb-round">{t('Round {0} of {1}', workSeg.round, tabata.rounds)}</div>}
+        <div className={'tb-side ' + (workSeg?.side || 'both')}>{sideText}</div>
       </> : <>
         <div className="tb-label">{seg.kind === 'prep' ? t('First exercise') : t('Exercise {0} of {1}', (workSeg?.e ?? 0) + 1, A.entries.length)}</div>
         <div className="tb-ex">{ex ? ex.n : ''}</div>
         <div className="tb-round">{t('Round {0} of {1}', workSeg?.round || 1, tabata.rounds)}</div>
+        <div className={'tb-side ' + (workSeg?.side || 'both')}>{sideText}</div>
         <div className="tb-dots">
           {roundDots.map((st, i) => <i key={i} className={st} />)}
         </div>

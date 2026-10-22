@@ -956,6 +956,9 @@ h4.sec{
 .tb-label{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--label-3);margin-top:6px}
 .tb-ex{font-size:22px;font-weight:600;letter-spacing:-.02em;text-transform:capitalize;line-height:1.15;max-width:22ch}
 .tb-round{font-size:14px;color:var(--label-2);font-variant-numeric:tabular-nums}
+.tb-side{margin-top:5px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--acc)}
+.tb-side.right{color:var(--blue)}
+.tb-side.both{color:var(--label-3)}
 .tb-next{font-size:12px;color:var(--label-3);margin-top:7px}
 .tb-dots{display:flex;gap:6px;margin-top:7px}
 .tb-dots i{width:9px;height:9px;border-radius:50%;background:var(--surface-3);transition:background var(--fast),transform var(--fast)}

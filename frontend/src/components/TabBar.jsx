@@ -2,6 +2,9 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { effectiveRoutine } from '../lib/history.js'
 import { todayISO } from '../lib/format.js'
+import { sessionById } from '../lib/tabata.js'
+import { startTabata } from '../lib/tabata-session.js'
+import { enterFullscreen } from '../lib/fullscreen.js'
 import { t } from '../lib/i18n.js'
 import Icon from './Icon.jsx'
 
@@ -19,6 +22,8 @@ export default function TabBar({ onStart }) {
     if (!S.active) {
       const r = effectiveRoutine(S, todayISO())
       if (r && r.ex.length) { onStart(r.id); return }
+      const tab = S.dayPlan[todayISO()] === undefined ? sessionById(S.tabataWeek?.[new Date().getDay()]) : null
+      if (tab) { enterFullscreen(); startTabata(tab); nav('/tabata/play'); return }
     }
     nav('/workout')
   }

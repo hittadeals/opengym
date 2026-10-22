@@ -5,10 +5,10 @@
 ### Kettlebell Tabata
 
 Eight short interval sessions on one bell, built on the original Tabata protocol: 20 seconds of
-work, 10 seconds of rest, eight circuit rounds, with a 45-second break between rounds. Every
-round visits each exercise once, so the next movement is always one interval away instead of
-eight. Every session runs 15–25 minutes, and the set covers full body, upper body, lower body,
-the posterior chain, push, pull, core and a harder conditioning finisher.
+work, 10 seconds of rest, five or six circuit rounds, with a 45-second break between rounds.
+Every round visits each exercise once, and unilateral lifts alternate arms in back-to-back
+intervals (left, then right). Every session runs 15–25 minutes, and the set covers full body,
+upper body, lower body, the posterior chain, push, pull, core and a harder conditioning finisher.
 
 - ⏱️ **A clock you can read from a metre away.** Starting a session opens a full-screen
   countdown with the phase, the exercise, the round and the time left in the whole session. It
@@ -23,10 +23,21 @@ the posterior chain, push, pull, core and a harder conditioning finisher.
   summary works exactly as it does for a normal session.
 - 🔁 **Resume after a reload.** Reopening the player resumes at the first interval that has not
   been logged; a finished session lands on its own summary instead of replaying from the top.
-- 🔄 **Circuit, not a loop.** Each round rotates through every exercise — work, rest, next
-  movement — and then takes a 45-second break before the next round. The same exercise no
-  longer occupies four straight minutes, and the round dots now show where you are *within the
-  round* rather than how many rounds of one lift are left.
+- 🔄 **One bell, one arm at a time.** Every pass is built for a single kettlebell. Unilateral
+  lifts (row, press, floor press, clean, snatch, windmill, bent press) expand to a left interval
+  followed immediately by a right interval, so the next thing the clock shows is the other arm.
+  Bilateral work (goblet squat, swing, thruster) uses the same bell with both hands.
+- 🗣️ **Spoken cues.** A short voice announces the exercise and the arm at every work interval,
+  "rest" at every rest and the round break. Settings → Voice cues turns it off; it follows the
+  Sounds switch.
+- ⏸️ **Interruptions pause the clock.** Switching apps, locking the screen or taking a call
+  pauses the interval instead of letting wall-clock time run past work you have not done.
+- 📅 **On the weekly plan.** A day can now hold a Tabata session instead of a routine. It shows
+  on Home and Plan, and the Start button launches the interval player directly.
+- 📊 **Tabata stats.** Stats gains a card with sessions, last 30 days, completed intervals and
+  total work time, plus the three most-played passes.
+- 📶 **Offline demonstrations.** The service worker caches the 360×360 GIFs on first view, so a
+  session already seen once still shows its demos without a connection.
 - 🔊 **Sound that survives a phone.** Timer beeps were silent on mobile because the
   AudioContext started inside a timer callback, which browsers block. It is now primed on the
   first tap (and again on Start), set to the playback audio session so the iPhone ringer switch

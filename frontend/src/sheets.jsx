@@ -8,6 +8,7 @@ import { beep, vibrate } from './lib/sound.js'
 import { t, instrFor, getLang, INSTR_LANGS } from './lib/i18n.js'
 import { nav } from './lib/nav.js'
 import { starterRoutines } from './lib/starter.js'
+import { SESSIONS, sessionSeconds } from './lib/tabata.js'
 import Media, { Thumb } from './components/Media.jsx'
 import Stepper from './components/Stepper.jsx'
 import Icon from './components/Icon.jsx'
@@ -679,15 +680,32 @@ export const dayOverrideSheet = iso => ui().openSheet(close => <DayOverride iso=
 
 function DayAssign({ day, close }) {
   const st = useStore(s => s.S)
-  const set = v => { update(s => { if (v) s.week[day] = v; else delete s.week[day] }); close() }
+  const set = v => {
+    update(s => {
+      if (v) s.week[day] = v; else delete s.week[day]
+      delete s.tabataWeek[day]
+    })
+    close()
+  }
+  const setTabata = id => {
+    update(s => { s.tabataWeek[day] = id; delete s.week[day] })
+    close()
+  }
   return <>
     <h3>{t(DAYN[day])}</h3>
     <div className="list">
-      <div className="item" onClick={() => set('')}><span className="lrow-i" style={{ background: 'var(--surface-3)' }}><Icon name="moon" /></span><div className="grow"><div className="tt">{t('Rest day')}</div></div>{!st.week[day] && <Icon name="check" className="accent" />}</div>
+      <div className="item" onClick={() => set('')}><span className="lrow-i" style={{ background: 'var(--surface-3)' }}><Icon name="moon" /></span><div className="grow"><div className="tt">{t('Rest day')}</div></div>{!st.week[day] && !st.tabataWeek[day] && <Icon name="check" className="accent" />}</div>
       {st.routines.map(r => <div key={r.id} className="item" onClick={() => set(r.id)}>
         <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
         <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
         {st.week[day] === r.id && <Icon name="check" className="accent" />}</div>)}
+    </div>
+    <h4 className="sec" style={{ marginTop: 14 }}>{t('Kettlebell Tabata')}</h4>
+    <div className="list">
+      {SESSIONS.map(session => <div key={session.id} className="item" onClick={() => setTabata(session.id)}>
+        <span className="lrow-i" style={{ color: 'var(--acc)' }}><Icon name="kettlebell" /></span>
+        <div className="grow"><div className="tt">{session.name}</div><div className="ss">{t(session.level)} · {t('{0} rounds', session.rounds)} · ~{Math.round(sessionSeconds(session) / 60)} min</div></div>
+        {st.tabataWeek[day] === session.id && <Icon name="check" className="accent" />}</div>)}
     </div>
   </>
 }
@@ -933,6 +951,12 @@ function doFinishWorkout() {
     // as "0 reps". It is what the progression engine works from.
     entries: A.entries.map(e => ({ id: e.id, sets: e.sets, topW: e.topW || null, target: e.target || null })).filter(e => e.sets.some(s => s.done)),
     prs
+  }
+  if (A.tabata) {
+    w.tabata = {
+      id: A.tabata.id, name: A.tabata.name, rounds: A.tabata.rounds,
+      work: A.tabata.work, rest: A.tabata.rest, between: A.tabata.between
+    }
   }
   w.vol = workoutVolume(w)
   update(s => {

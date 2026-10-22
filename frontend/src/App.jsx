@@ -6,6 +6,7 @@ import { bindUI } from './components/ui.jsx'
 import { ACCENTS } from './lib/format.js'
 import { setLang, useLang } from './lib/i18n.js'
 import { unlockAudio } from './lib/sound.js'
+import { primeVoice } from './lib/voice.js'
 import { setNav } from './lib/nav.js'
 import { useWakeLock } from './lib/wakelock.js'
 import { startFlow } from './sheets.jsx'
@@ -53,7 +54,7 @@ function Shell() {
   // Browsers only allow an AudioContext to start inside a real gesture. Prime it on the
   // first tap/keypress so timer beeps later are not silent — especially on iOS.
   useEffect(() => {
-    const unlock = () => { unlockAudio() }
+    const unlock = () => { unlockAudio(); primeVoice() }
     window.addEventListener('pointerdown', unlock, { passive: true })
     window.addEventListener('keydown', unlock)
     return () => {
