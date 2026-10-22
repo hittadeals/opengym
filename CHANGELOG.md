@@ -23,6 +23,18 @@ posterior chain, push, pull, core and a harder conditioning finisher.
 - 🔁 **Resume after a reload.** Reopening the player resumes at the first interval that has not
   been logged; a finished session lands on its own summary instead of replaying from the top.
 
+### Sharper exercise demos
+
+The exercise library's images and GIFs ship at 180×180 — the resolution the upstream dataset is
+licensed to redistribute. That is the ceiling for the bundled media, and the app now renders it
+at 180 px instead of stretching it.
+
+For anyone who wants more, `scripts/import-hd-media.mjs` imports the licensed ExerciseDB.io
+package, whose numeric exercise ids match this dataset one-to-one. It copies by id only after
+checking the exercise name and equipment, leaves the bundled 180 file in place when anything
+looks wrong, and writes a report of every skipped or mismatched id. Starter (360×360) and Pro
+(720/1080) both fit the same script; media stays in `./media` and out of git.
+
 ### The AI Coach
 
 openGym could always progress a plan. It could never *write* one, and it never looked at the
