@@ -22,6 +22,14 @@ posterior chain, push, pull, core and a harder conditioning finisher.
   summary works exactly as it does for a normal session.
 - 🔁 **Resume after a reload.** Reopening the player resumes at the first interval that has not
   been logged; a finished session lands on its own summary instead of replaying from the top.
+- 🖼️ **The exercise is the hero.** The player now leads with a large looping demonstration and
+  puts the countdown directly underneath it, the way interval apps do — exercise, then clock,
+  then round and phase. The list shows each session's level, the exercises it contains with
+  thumbnails, and a short coaching note.
+- 🎯 **Reviewed exercise selection.** The advanced, fatigue-sensitive pick in Push (plyo
+  push-up), Pull (renegade row) and Core (Turkish get-up) was replaced with a simpler movement
+  that still trains the same pattern; the snatch stays only in the advanced conditioning
+  session, with a note to swap it if technique breaks down.
 
 ### Sharper exercise demos
 

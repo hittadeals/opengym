@@ -17,27 +17,31 @@ export const SESSIONS = [
     id: 'full-body-foundations',
     name: 'Full Body Foundations',
     focus: 'Full body',
+    level: 'Beginner',
     note: 'Start here. One bell, crisp reps, and stop the set before the hinge turns into a squat.',
     ex: ['0534', '0549', '0522', '0553']
-  },
-  {
-    id: 'upper-body-power',
-    name: 'Upper Body Power',
-    focus: 'Upper body',
-    note: 'Alternate sides on the press and the row: one round left, the next round right.',
-    ex: ['0520', '0541', '0535', '0523']
   },
   {
     id: 'lower-body-burn',
     name: 'Lower Body Burn',
     focus: 'Lower body',
-    note: 'Keep the bell close and the knees tracking over the toes, even as the rest gets short.',
+    level: 'Intermediate',
+    note: 'Step through under control on the lunge pass-through; alternate the leading leg each round.',
     ex: ['0534', '0533', '0549', '0536']
+  },
+  {
+    id: 'upper-body-power',
+    name: 'Upper Body Power',
+    focus: 'Upper body',
+    level: 'Intermediate',
+    note: 'Alternate sides on the press and the row: one round left, the next round right.',
+    ex: ['0520', '0541', '0535', '0523']
   },
   {
     id: 'posterior-chain',
     name: 'Posterior Chain',
     focus: 'Hinge & back',
+    level: 'Intermediate',
     note: 'Hips, not arms. Every swing and high pull starts with a hard snap of the glutes.',
     ex: ['0549', '0548', '0552', '1345']
   },
@@ -45,28 +49,32 @@ export const SESSIONS = [
     id: 'push-day',
     name: 'Push Day',
     focus: 'Chest & shoulders',
+    level: 'Intermediate',
     note: 'Use a lighter bell than your strength work — the press has to stay smooth for 20 seconds.',
-    ex: ['0553', '0540', '1298', '0545']
+    ex: ['0553', '0540', '1298', '0547']
   },
   {
     id: 'pull-day',
     name: 'Pull Day',
     focus: 'Back & grip',
-    note: 'Switch arms each round on the rows. If the grip fades, set the bell down for a second.',
-    ex: ['0541', '0521', '0552', '0548']
+    level: 'Intermediate',
+    note: 'Switch arms each round on the one-arm row. If the grip fades, set the bell down for a second.',
+    ex: ['0541', '1345', '0548', '0552']
   },
   {
     id: 'core-and-control',
     name: 'Core & Control',
     focus: 'Core',
-    note: 'Slow is fine. These four reward control and a stable shoulder more than speed.',
-    ex: ['0532', '0554', '0524', '0551']
+    level: 'Advanced',
+    note: 'Skill work in interval clothing: light bell, slow tempo, technique over speed. Do not chase reps.',
+    ex: ['0532', '0554', '0530', '0524']
   },
   {
     id: 'full-body-conditioning',
     name: 'Full Body Conditioning',
     focus: 'Conditioning',
-    note: 'The hardest session of the eight. Five exercises, one bell, and 20 seconds to work.',
+    level: 'Advanced',
+    note: 'The hardest session of the eight. Only use the snatch if it stays solid when you are tired.',
     ex: ['0549', '0550', '0542', '0548', '0534']
   }
 ]

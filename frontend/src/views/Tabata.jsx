@@ -8,7 +8,7 @@ import { t } from '../lib/i18n.js'
 import { beep, vibrate } from '../lib/sound.js'
 import { SESSIONS, TABATA, segmentsFor, sessionSeconds, firstPendingIndex, clock } from '../lib/tabata.js'
 import { confirmSheet, finishWorkout } from '../sheets.jsx'
-import Media from '../components/Media.jsx'
+import Media, { Thumb } from '../components/Media.jsx'
 import Icon from '../components/Icon.jsx'
 import { Button } from '../components/ui.jsx'
 
@@ -96,9 +96,19 @@ export default function Tabata() {
         return <div key={session.id} className="item" onClick={() => begin(session)} style={{ alignItems: 'flex-start' }}>
           <span className="lrow-i" style={{ marginTop: 2 }}><Icon name="kettlebell" /></span>
           <div className="grow" style={{ minWidth: 0 }}>
-            <div className="tt">{session.name}</div>
+            <div className="row between" style={{ gap: 8 }}>
+              <div className="tt">{session.name}</div>
+              <span className="tag">{t(session.level)}</span>
+            </div>
             <div className="ss">{t(session.focus)} · {session.ex.length} × 8 · ~{mins} min</div>
-            <div className="small dim" style={{ marginTop: 4, lineHeight: 1.4 }}>{session.note}</div>
+            <div className="tb-thumbs">
+              {session.ex.map(id => {
+                const e = exOr(id)
+                return <span className="tb-thumb" key={id} title={e.n}><Thumb ex={e} /></span>
+              })}
+            </div>
+            <div className="tb-includes">{session.ex.map(id => exOr(id).n).join(' · ')}</div>
+            <div className="small dim tb-note">{session.note}</div>
           </div>
           <span className="tag acc">{t('Start')}</span>
         </div>
@@ -237,6 +247,12 @@ export function TabataPlayer() {
   const secs = Math.ceil(left / 1000)
   const phase = seg.kind === 'prep' ? t('Get ready') : seg.kind === 'work' ? t('Work') : t('Rest')
   const big = clock(secs)
+  const nextWorkSeg = seg.kind === 'work' ? segs.slice(idx + 1).find(s => s.kind === 'work') : null
+  const nextLine = nextWorkSeg
+    ? (nextWorkSeg.e === workSeg?.e
+        ? t('Then rest · round {0}', nextWorkSeg.round)
+        : t('Next: {0}', exOr(A.entries[nextWorkSeg.e].id).n))
+    : null
 
   return <div className="tabata-player" data-phase={seg.kind}>
     <div className="tb-top">
@@ -249,6 +265,8 @@ export function TabataPlayer() {
         if (!paused) pauseNow(); else setPaused(false)
       }} aria-label={paused ? t('Resume') : t('Pause')}><Icon name={paused ? 'play' : 'pause'} /></button>
     </div>
+
+    {ex && <div className="tb-visual"><Media ex={ex} /></div>}
 
     <div className="tb-stage">
       <div className={'tb-phase ' + seg.kind} aria-live="polite">{phase}</div>
@@ -268,10 +286,9 @@ export function TabataPlayer() {
             return <i key={i} className={st} />
           })}
         </div>
+        {nextLine && <div className="tb-next">{nextLine}</div>}
       </>}
     </div>
-
-    {ex && <div className="tb-media"><Media ex={ex} compact /></div>}
 
     <div className="tb-progress"><i style={{ width: pct + '%' }} /></div>
     <div className="tb-legend">
