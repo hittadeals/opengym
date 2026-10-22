@@ -52,6 +52,12 @@ services:
       - ../files/data:/data  # users, passkeys, per-user state, session secret — BACK THIS UP
       # ChatGPT/Codex refresh tokens, mounted only into the API container.
       - ../files/data/codex:/codex
+    # "internal" is the shared compose network. Dokploy puts the service that owns the
+    # domain on dokploy-network; without an explicit shared network here, web and api
+    # can end up on different networks and nginx fails with
+    # "host not found in upstream api".
+    networks:
+      - internal
 
   # Builds the React frontend (multi-stage) and serves it, proxying /api → api
   # and the exercise media from the shared folder. Single origin for passkeys.
@@ -71,3 +77,13 @@ services:
     volumes:
       - ../files/media/img:/usr/share/nginx/html/img:ro
       - ../files/media/gif:/usr/share/nginx/html/gif:ro
+    networks:
+      - internal        # reach api by name
+      - dokploy-network # reachable by Dokploy's Traefik
+
+# "internal" is private to this compose project; dokploy-network already exists
+# (created by Dokploy) and is what Traefik routes through.
+networks:
+  internal:
+  dokploy-network:
+    external: true
