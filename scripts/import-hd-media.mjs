@@ -197,3 +197,5 @@ if (review) {
 }
 console.log(`\nreport: ${report}`)
 console.log('Redeploy, or just reload the page: the web server serves the media folder directly.')
+console.log('Already-installed clients cache media cache-first — bump CACHE in frontend/public/sw.js')
+console.log('(opengym-rt-v1 -> v2) when you swap the files, or they keep the old cached GIFs.')
