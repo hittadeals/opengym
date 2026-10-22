@@ -928,9 +928,11 @@ h4.sec{
   overflow-y:auto;overscroll-behavior:contain;
 }
 .tabata-player>*{width:100%;max-width:720px;margin-left:auto;margin-right:auto}
-.tb-top{display:flex;align-items:center;gap:10px;flex:none}
-.tb-top>div{flex:1;min-width:0}
+.tb-top{display:flex;align-items:center;gap:6px;flex:none}
+.tb-title{flex:1;min-width:0;text-align:center}
 .tb-top .sub{margin-top:1px}
+.tb-tools{display:flex;align-items:center;gap:2px;flex:none}
+.tb-tools .iconbtn{width:34px;height:34px;font-size:16px}
 
 /* The demonstration is the point of the screen: give it the top of the display at a size
    where the movement is readable, then put the clock directly underneath it. */

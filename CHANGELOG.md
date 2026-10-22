@@ -27,6 +27,13 @@ the posterior chain, push, pull, core and a harder conditioning finisher.
   movement — and then takes a 45-second break before the next round. The same exercise no
   longer occupies four straight minutes, and the round dots now show where you are *within the
   round* rather than how many rounds of one lift are left.
+- 🔊 **Sound that survives a phone.** Timer beeps were silent on mobile because the
+  AudioContext started inside a timer callback, which browsers block. It is now primed on the
+  first tap (and again on Start), set to the playback audio session so the iPhone ringer switch
+  does not mute it, and resumable if the OS suspends it. Settings → Sounds has a **Test** button.
+- ⛶ **Fullscreen.** Starting a session asks for fullscreen from the same tap, and the player has
+  a fullscreen toggle. Leaving the player releases it. iPhone Safari has no element fullscreen;
+  there the installed PWA already runs chrome-free.
 - 🖼️ **The exercise is the hero.** The player now leads with a large looping demonstration and
   puts the countdown directly underneath it, the way interval apps do — exercise, then clock,
   then round and phase. The list shows each session's level, the exercises it contains with

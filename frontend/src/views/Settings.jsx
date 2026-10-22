@@ -7,6 +7,7 @@ import { effortOf } from '../lib/history.js'
 import { webauthnOK, passkeyLogin, passkeyRegister, IS_ANDROID } from '../lib/api.js'
 import { pushSupported, enablePush, disablePush, sendTestPush } from '../lib/push.js'
 import { wakeLockSupported } from '../lib/wakelock.js'
+import { unlockAudio, beep } from '../lib/sound.js'
 import { t, LANGS, INSTR_LANGS } from '../lib/i18n.js'
 import { DEMO, REPO } from '../lib/demo.js'
 import { MOBILE, shareExport, syncReminder } from '../lib/mobile.js'
@@ -130,7 +131,8 @@ export default function Settings() {
             onChange={v => update(s => { s.keepAwake = v })} />
         </Row>
       )}
-      <Row icon="bell" iconTint="var(--pink)" title={t('Sounds')}>
+      <Row icon="bell" iconTint="var(--pink)" title={t('Sounds')} subtitle={t('Phones need one tap before timer sounds can play.')}>
+        <Button size="sm" onClick={async () => { await unlockAudio(); beep(true, 880, 0.12); beep(true, 1180, 0.18, 0.13) }}>{t('Test')}</Button>
         <Switch checked={!!S.sound} onChange={v => update(s => { s.sound = v })} />
       </Row>
       {/* Two names for the same judgement, so the column asks in the scale you already think in.

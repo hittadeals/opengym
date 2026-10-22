@@ -5,7 +5,8 @@ import { useUI } from '../store/useUI.js'
 import { exOr } from '../lib/exercises.js'
 import { uid, todayISO } from '../lib/format.js'
 import { t } from '../lib/i18n.js'
-import { beep, vibrate } from '../lib/sound.js'
+import { beep, vibrate, unlockAudio } from '../lib/sound.js'
+import { fullscreenSupported, fullscreenElement, enterFullscreen, exitFullscreen, onFullscreenChange } from '../lib/fullscreen.js'
 import { SESSIONS, TABATA, segmentsFor, sessionSeconds, firstPendingIndex, clock } from '../lib/tabata.js'
 import { confirmSheet, finishWorkout } from '../sheets.jsx'
 import Media, { Thumb } from '../components/Media.jsx'
@@ -62,7 +63,14 @@ export default function Tabata() {
   if (active?.tabata) return <Navigate to="/tabata/play" replace />
 
   const begin = session => {
-    const go = () => { startSession(session); nav('/tabata/play') }
+    const go = () => {
+      // Both must happen inside the tap: the audio context needs a gesture, and fullscreen
+      // is only granted from one too.
+      unlockAudio()
+      enterFullscreen()
+      startSession(session)
+      nav('/tabata/play')
+    }
     if (active) {
       confirmSheet({
         title: t('Discard workout?'),
@@ -140,10 +148,27 @@ export function TabataPlayer() {
   const lastSec = useRef(Math.ceil((segs[startIdx]?.sec || 0)))
 
   // The player owns the clock, so any bar left over from the normal workout has to go.
+  // Fullscreen is released when the player really unmounts (the 50 ms delay avoids the
+  // StrictMode mount/unmount/mount cycle in development).
+  const [fs, setFs] = useState(!!fullscreenElement())
+  const mounted = useRef(false)
   useEffect(() => {
     useUI.getState().stopRest()
     useUI.getState().stopWork()
+    mounted.current = true
+    const off = onFullscreenChange(() => setFs(!!fullscreenElement()))
+    return () => {
+      off()
+      mounted.current = false
+      setTimeout(() => { if (!mounted.current) exitFullscreen() }, 50)
+    }
   }, [])
+
+  const toggleSound = async () => {
+    const next = !S.sound
+    useStore.getState().update(s => { s.sound = next })
+    if (next) { await unlockAudio(); beep(true, 880, 0.12); beep(true, 1180, 0.18, 0.13) }
+  }
 
   function markDone(seg) {
     useStore.getState().update(s => {
@@ -261,13 +286,24 @@ export function TabataPlayer() {
   return <div className="tabata-player" data-phase={seg.kind}>
     <div className="tb-top">
       <button className="iconbtn" onClick={leave} aria-label={t('Leave the session')}><Icon name="xmark" /></button>
-      <div style={{ textAlign: 'center', minWidth: 0 }}>
+      <div className="tb-title">
         <div style={{ fontWeight: 600, fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tabata.name}</div>
         <div className="sub">{t('{0} left', clock(totalLeft))}</div>
       </div>
-      <button className={'iconbtn' + (paused ? ' on-ss' : '')} onClick={() => {
-        if (!paused) pauseNow(); else setPaused(false)
-      }} aria-label={paused ? t('Resume') : t('Pause')}><Icon name={paused ? 'play' : 'pause'} /></button>
+      <div className="tb-tools">
+        <button className="iconbtn" onClick={toggleSound} aria-label={S.sound ? t('Mute') : t('Enable sound')} title={S.sound ? t('Mute') : t('Enable sound')}>
+          <Icon name={S.sound ? 'bell' : 'bellSlash'} />
+        </button>
+        {fullscreenSupported() && (
+          <button className="iconbtn" onClick={() => (fs ? exitFullscreen() : enterFullscreen())}
+            aria-label={fs ? t('Exit fullscreen') : t('Fullscreen')} title={fs ? t('Exit fullscreen') : t('Fullscreen')}>
+            <Icon name={fs ? 'minimize' : 'expand'} />
+          </button>
+        )}
+        <button className={'iconbtn' + (paused ? ' on-ss' : '')} onClick={() => {
+          if (!paused) pauseNow(); else setPaused(false)
+        }} aria-label={paused ? t('Resume') : t('Pause')}><Icon name={paused ? 'play' : 'pause'} /></button>
+      </div>
     </div>
 
     {ex && <div className="tb-visual"><Media ex={ex} /></div>}
