@@ -86,7 +86,7 @@ export default function Tabata() {
 
     <div className="card" style={{ marginTop: 0 }}>
       <div className="small muted" style={{ lineHeight: 1.5 }}>
-        {t('One kettlebell, eight rounds per exercise, and a clock that tells you when to work and when to breathe. Every session logs like a normal workout.')}
+        {t('One kettlebell, a circuit of eight rounds, and a clock that tells you when to work, when to rest and which exercise is next. Every session logs like a normal workout.')}
       </div>
     </div>
 
@@ -100,7 +100,7 @@ export default function Tabata() {
               <div className="tt">{session.name}</div>
               <span className="tag">{t(session.level)}</span>
             </div>
-            <div className="ss">{t(session.focus)} · {session.ex.length} × 8 · ~{mins} min</div>
+            <div className="ss">{t(session.focus)} · {t('{0} exercises · {1} rounds', session.ex.length, 8)} · ~{mins} min</div>
             <div className="tb-thumbs">
               {session.ex.map(id => {
                 const e = exOr(id)
@@ -249,10 +249,14 @@ export function TabataPlayer() {
   const big = clock(secs)
   const nextWorkSeg = seg.kind === 'work' ? segs.slice(idx + 1).find(s => s.kind === 'work') : null
   const nextLine = nextWorkSeg
-    ? (nextWorkSeg.e === workSeg?.e
-        ? t('Then rest · round {0}', nextWorkSeg.round)
+    ? (nextWorkSeg.round !== workSeg?.round
+        ? t('Next round: {0}', exOr(A.entries[nextWorkSeg.e].id).n)
         : t('Next: {0}', exOr(A.entries[nextWorkSeg.e].id).n))
     : null
+  // One dot per exercise in the current circuit round: done, current, or still ahead.
+  const circuitRound = workSeg?.round || 1
+  const roundDots = A.entries.map((en, i) =>
+    en.sets?.[circuitRound - 1]?.done ? 'done' : i === workSeg?.e ? 'on' : '')
 
   return <div className="tabata-player" data-phase={seg.kind}>
     <div className="tb-top">
@@ -281,10 +285,7 @@ export function TabataPlayer() {
         <div className="tb-ex">{ex ? ex.n : ''}</div>
         <div className="tb-round">{t('Round {0} of {1}', workSeg?.round || 1, tabata.rounds)}</div>
         <div className="tb-dots">
-          {Array.from({ length: tabata.rounds }, (_, i) => {
-            const st = A.entries[workSeg?.e ?? 0]?.sets?.[i]?.done ? 'done' : i + 1 === workSeg?.round ? 'on' : ''
-            return <i key={i} className={st} />
-          })}
+          {roundDots.map((st, i) => <i key={i} className={st} />)}
         </div>
         {nextLine && <div className="tb-next">{nextLine}</div>}
       </>}

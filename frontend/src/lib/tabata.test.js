@@ -34,15 +34,23 @@ describe('segmentsFor', () => {
     expect(segmentsFor(1)[0]).toMatchObject({ kind: 'prep', sec: TABATA.prep })
   })
 
-  it('walks 8 work intervals per exercise with short rests and one long break between', () => {
+  it('rotates exercises inside every round instead of repeating one', () => {
+    const segs = segmentsFor(2, { ...TABATA, prep: 0, rounds: 2 })
+    expect(segs.filter(s => s.kind === 'work').map(s => `${s.e}:${s.round}`))
+      .toEqual(['0:1', '1:1', '0:2', '1:2'])
+    expect(segs.filter(s => s.long).map(s => `${s.e}:${s.round}`)).toEqual(['1:1'])
+  })
+
+  it('walks 8 work intervals per exercise with short rests and a break between rounds', () => {
     const segs = segmentsFor(2, { ...TABATA, prep: 0 })
     expect(segs.filter(s => s.kind === 'work')).toHaveLength(16)
     expect(segs.filter(s => s.kind === 'rest')).toHaveLength(15)
     expect(segs[0]).toMatchObject({ kind: 'work', e: 0, round: 1, sec: 20 })
     expect(segs[1]).toMatchObject({ kind: 'rest', e: 0, round: 1, sec: 10, long: false })
-    // the last work of the first exercise is followed by the break, not a 10 s rest
-    const lastOfFirst = segs.findIndex(s => s.kind === 'work' && s.e === 0 && s.round === 8)
-    expect(segs[lastOfFirst + 1]).toMatchObject({ kind: 'rest', sec: TABATA.between, long: true })
+    // the last work of a round is followed by the break, then the first exercise again
+    const endOfRound = segs.findIndex(s => s.kind === 'work' && s.e === 1 && s.round === 1)
+    expect(segs[endOfRound + 1]).toMatchObject({ kind: 'rest', sec: TABATA.between, long: true })
+    expect(segs[endOfRound + 2]).toMatchObject({ kind: 'work', e: 0, round: 2 })
     // and the session ends on work, with no trailing rest
     expect(segs.at(-1)).toMatchObject({ kind: 'work', e: 1, round: 8 })
   })

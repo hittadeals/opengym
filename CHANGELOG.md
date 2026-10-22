@@ -5,9 +5,10 @@
 ### Kettlebell Tabata
 
 Eight short interval sessions on one bell, built on the original Tabata protocol: 20 seconds of
-work, 10 seconds of rest, eight rounds per exercise, with a longer break between exercises.
-Every session runs 15–25 minutes, and the set covers full body, upper body, lower body, the
-posterior chain, push, pull, core and a harder conditioning finisher.
+work, 10 seconds of rest, eight circuit rounds, with a 45-second break between rounds. Every
+round visits each exercise once, so the next movement is always one interval away instead of
+eight. Every session runs 15–25 minutes, and the set covers full body, upper body, lower body,
+the posterior chain, push, pull, core and a harder conditioning finisher.
 
 - ⏱️ **A clock you can read from a metre away.** Starting a session opens a full-screen
   countdown with the phase, the exercise, the round and the time left in the whole session. It
@@ -22,6 +23,10 @@ posterior chain, push, pull, core and a harder conditioning finisher.
   summary works exactly as it does for a normal session.
 - 🔁 **Resume after a reload.** Reopening the player resumes at the first interval that has not
   been logged; a finished session lands on its own summary instead of replaying from the top.
+- 🔄 **Circuit, not a loop.** Each round rotates through every exercise — work, rest, next
+  movement — and then takes a 45-second break before the next round. The same exercise no
+  longer occupies four straight minutes, and the round dots now show where you are *within the
+  round* rather than how many rounds of one lift are left.
 - 🖼️ **The exercise is the hero.** The player now leads with a large looping demonstration and
   puts the countdown directly underneath it, the way interval apps do — exercise, then clock,
   then round and phase. The list shows each session's level, the exercises it contains with

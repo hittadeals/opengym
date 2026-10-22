@@ -7,11 +7,16 @@
 // 17 and 24 minutes, which is the 15–25 minute window the sessions are designed for.
 import { EXIDX } from './exercises.js'
 
-export const TABATA = { work: 20, rest: 10, rounds: 8, between: 60, prep: 10 }
+export const TABATA = { work: 20, rest: 10, rounds: 8, between: 45, prep: 10 }
 
 // Eight sessions, each built only from exercises in the catalogue whose equipment is
 // "kettlebell". `note` is shown in the session list and carries the one coaching cue that
 // matters for that selection (sides, pace, or load).
+//
+// The format is a circuit, not eight consecutive minutes of one movement: every round
+// visits each exercise once (20 s work, 10 s rest), then a 45 s break before the next
+// round. That keeps the clock moving to the next exercise the way interval apps do, and
+// spreads the fatigue across the whole session instead of one lift.
 export const SESSIONS = [
   {
     id: 'full-body-foundations',
@@ -86,17 +91,20 @@ export const sessionById = id => SESSIONS.find(s => s.id === id) || null
 //
 //   prep   — the get-ready countdown before the first interval
 //   work   — one exercise, `round` of `rounds`
-//   rest   — after a work interval; `long` marks the break between two exercises
+//   rest   — after a work interval; `long` marks the break between two rounds
+//
+// Exercises rotate inside a round: e0, e1, e2, e3, break, e0, e1 … so the next exercise is
+// always one interval away rather than eight.
 export function segmentsFor(count, cfg = TABATA) {
   const out = []
   if (cfg.prep > 0) out.push({ kind: 'prep', sec: cfg.prep })
-  for (let e = 0; e < count; e++) {
-    for (let r = 0; r < cfg.rounds; r++) {
+  for (let r = 0; r < cfg.rounds; r++) {
+    for (let e = 0; e < count; e++) {
       out.push({ kind: 'work', e, round: r + 1, sec: cfg.work })
-      const lastWork = e === count - 1 && r === cfg.rounds - 1
+      const lastWork = r === cfg.rounds - 1 && e === count - 1
       if (lastWork) break
-      const long = r === cfg.rounds - 1
-      out.push({ kind: 'rest', e, round: r + 1, sec: long ? cfg.between : cfg.rest, long })
+      const endOfRound = e === count - 1
+      out.push({ kind: 'rest', e, round: r + 1, sec: endOfRound ? cfg.between : cfg.rest, long: endOfRound })
     }
   }
   return out
