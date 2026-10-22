@@ -1,0 +1,73 @@
+# Dokploy variant of docker-compose.yml.
+#
+# Why a separate file:
+#   - Dokploy re-clones the repo into ./code on every deploy, so relative bind mounts
+#     like ./data and ./media would be wiped. Persistent state must live in ../files,
+#     which Dokploy keeps untouched between deployments.
+#   - Dokploy routes traffic with Traefik, so the web container needs no host port
+#     mapping. Add a domain in the Dokploy UI pointing at service "web", port 80.
+#   - No fixed project name here; Dokploy passes its own with `-p`.
+#
+# In Dokploy: Compose Path = ./docker-compose.dokploy.yml
+#
+# Environment variables (Dokploy → Environment tab, written to .env next to this file):
+#   RP_ID=gym.example.com
+#   ORIGIN=https://gym.example.com
+#   RP_NAME=openGym
+#   # optional: ADMIN_UIDS=..., INVITE_ONLY=1, SESSION_DAYS=90, COACH_DISABLED=1
+
+services:
+  # One-time: download the exercise images + GIFs into ../files/media (skipped if already there).
+  # ~140 MB, from github.com/hasaneyldrm/exercises-dataset (CC).
+  media:
+    image: alpine/git
+    volumes:
+      - ../files/media/img:/out/img
+      - ../files/media/gif:/out/gif
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        if [ -z "$$(ls -A /out/img 2>/dev/null)" ]; then
+          echo "↓ Downloading exercise media (~140 MB, one time)…"
+          git clone --depth 1 https://github.com/hasaneyldrm/exercises-dataset /tmp/ds
+          cp /tmp/ds/images/*.jpg /out/img/ && cp /tmp/ds/videos/*.gif /out/gif/
+          echo "✓ Exercise media ready ($$(ls /out/img | wc -l) images)."
+        else
+          echo "✓ Exercise media already present — skipping download."
+        fi
+    restart: "no"
+
+  # Passkey auth + per-user data (Node, no framework). Never published to the host;
+  # only the web container talks to it over the compose network.
+  api:
+    build: ./api
+    image: opengym-api:local
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - PORT=3000            # internal port (nginx proxies here) — do not change
+      - DATA_DIR=/data
+      - COACH_CODEX_HOME=/codex
+    volumes:
+      - ../files/data:/data  # users, passkeys, per-user state, session secret — BACK THIS UP
+      # ChatGPT/Codex refresh tokens, mounted only into the API container.
+      - ../files/data/codex:/codex
+
+  # Builds the React frontend (multi-stage) and serves it, proxying /api → api
+  # and the exercise media from the shared folder. Single origin for passkeys.
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    image: opengym-web:local
+    restart: unless-stopped
+    depends_on:
+      media:
+        condition: service_completed_successfully
+      api:
+        condition: service_started
+    expose:
+      - "80"
+    volumes:
+      - ../files/media/img:/usr/share/nginx/html/img:ro
+      - ../files/media/gif:/usr/share/nginx/html/gif:ro
